@@ -12,17 +12,6 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 
 # 🔴 High Priority
 
-## Person 1
-
-- Initialize FastAPI project.
-- Create backend folder structure.
-- Configure environment variables.
-- Create OpenAI-compatible `/chat/completions` endpoint.
-- Implement request validation.
-- Set up logging and middleware.
-
----
-
 ## Person 2
 
 - Design Identity Engine.
@@ -58,7 +47,6 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 ## Person 1
 
 - Docker configuration.
-- Health endpoint.
 - Deployment configuration.
 
 ---
@@ -107,7 +95,7 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 
 ## Milestone 2
 
-⬜ Backend Running
+✅ Backend Running
 
 ---
 

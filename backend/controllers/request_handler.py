@@ -6,20 +6,33 @@ before delegating to the orchestrator.
 
 import logging
 
+from backend.models.requests import ChatCompletionRequest, ConversationRequest
+
 logger = logging.getLogger(__name__)
 
 
 class RequestHandler:
     """Handles incoming request parsing and validation."""
 
-    def validate_request(self, body: dict) -> bool:
-        """Validate the incoming request body structure."""
-        pass
+    VALID_ROLES = {"system", "user", "assistant"}
 
-    def extract_conversation(self, body: dict):
-        """Extract and return the conversation history from the request."""
-        pass
+    def parse(self, body: ChatCompletionRequest) -> ConversationRequest:
+        """Parse a validated ChatCompletionRequest into an internal context."""
+        if not body.messages:
+            raise ValueError("messages list is empty")
 
-    def build_context(self, body: dict):
-        """Build a ConversationContext from the raw request body."""
-        pass
+        for msg in body.messages:
+            if msg.role not in self.VALID_ROLES:
+                raise ValueError(f"invalid role: {msg.role}")
+
+        current = body.messages[-1].content if body.messages else ""
+
+        return ConversationRequest(
+            conversation=[m.model_dump() for m in body.messages],
+            current_message=current,
+            metadata={
+                "model": body.model,
+                "temperature": body.temperature,
+                "max_tokens": body.max_tokens,
+            },
+        )
