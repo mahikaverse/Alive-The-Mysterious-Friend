@@ -54,6 +54,7 @@ class PipelineContext(BaseModel):
     section at default values.
     """
 
+    request_id: str = ""
     conversation: list[dict] = Field(default_factory=list)
     current_message: str = ""
     metadata: dict = Field(default_factory=dict)

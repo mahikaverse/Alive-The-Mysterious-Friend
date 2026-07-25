@@ -8,13 +8,13 @@
 
 **Project Version:** v1.0
 
-**Overall Progress:** 20%
+**Overall Progress:** 25%
 
 ---
 
 # Current Phase
 
-🟢 Backend Foundation
+🟢 Pipeline Integration
 
 ---
 
@@ -40,15 +40,15 @@
 
 # Current Sprint
 
-Sprint 1 – Project Foundation
+Sprint 2 – Pipeline & Integration
 
 Goals:
 
-- Create project structure
-- Complete architecture
-- Complete API contracts
-- Assign ownership
-- Initialize backend
+- Complete request lifecycle
+- Request ID / correlation ID traceability
+- Async interface contracts
+- Structured lifecycle logging
+- Graceful error propagation in pipeline
 
 ---
 
@@ -87,6 +87,7 @@ None
 - AI Prompts
 - Backend Foundation (FastAPI server, health endpoint, chat completions endpoint, middleware, logging, orchestrator skeleton)
 - API Contract Layer (enhanced Pydantic models with validators, custom HTTP exceptions, service interfaces, centralized exception handlers, pipeline context)
+- Chat Completions Pipeline (async interfaces, request ID/correlation traceability, structured lifecycle logging, graceful error propagation per step, X-Request-ID header propagation)
 
 ---
 

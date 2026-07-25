@@ -18,7 +18,7 @@ from backend.api.exceptions import (
     RateLimitException,
     UnauthorizedException,
 )
-from backend.api.middleware import RequestTimingMiddleware
+from backend.api.middleware import RequestContextMiddleware
 from backend.api.routes import router
 from backend.config.log_config import setup_logging
 from backend.config.settings import settings
@@ -47,7 +47,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(RequestTimingMiddleware)
+    app.add_middleware(RequestContextMiddleware)
 
     # --- singleton services ---
     app.state.orchestrator = ConversationController()

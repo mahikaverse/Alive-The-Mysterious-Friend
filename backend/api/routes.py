@@ -7,6 +7,7 @@ and health-check route.
 import time
 
 from fastapi import APIRouter, Depends
+from starlette.requests import Request
 
 from backend.api.dependencies import get_conversation_controller
 from backend.config.settings import settings
@@ -49,18 +50,22 @@ async def health() -> dict:
     description="OpenAI-compatible Chat Completions endpoint.",
 )
 async def chat_completions(
+    request: Request,
     body: ChatCompletionRequest,
     controller: ConversationController = Depends(get_conversation_controller),
 ) -> ChatCompletionResponse:
     """OpenAI-compatible Chat Completions endpoint."""
+    rid = request.state.request_id
     request_handler = RequestHandler()
     response_handler = ResponseHandler()
 
-    parsed = request_handler.parse(body)
+    parsed = request_handler.parse(body, request_id=rid)
     orchestrator_result = await controller.process_request(parsed)
+
     response = response_handler.format_response(
         content=orchestrator_result["content"],
         model=body.model,
+        request_id=rid,
     )
 
     return response

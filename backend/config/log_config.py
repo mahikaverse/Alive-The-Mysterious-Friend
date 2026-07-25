@@ -8,6 +8,7 @@ import logging
 import sys
 
 from backend.config.settings import settings
+from backend.utils.logging_context import RequestIDFilter
 
 
 def setup_logging() -> None:
@@ -18,10 +19,11 @@ def setup_logging() -> None:
     handler.setLevel(level)
 
     formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        "%(asctime)s [%(levelname)s] [%(request_id)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     handler.setFormatter(formatter)
+    handler.addFilter(RequestIDFilter())
 
     root = logging.getLogger()
     root.setLevel(level)

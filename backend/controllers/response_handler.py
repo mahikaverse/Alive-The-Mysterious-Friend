@@ -29,14 +29,17 @@ class ResponseHandler:
         self,
         content: str,
         model: str,
+        request_id: str = "",
         prompt_tokens: int = 0,
         completion_tokens: int = 0,
     ) -> ChatCompletionResponse:
         """Wrap the generated content in an OpenAI-compatible response envelope."""
         self._validate_content(content)
 
+        response_id = f"chatcmpl-{request_id}" if request_id else f"chatcmpl-{uuid.uuid4().hex[:12]}"
+
         return ChatCompletionResponse(
-            id=f"chatcmpl-{uuid.uuid4().hex[:12]}",
+            id=response_id,
             object="chat.completion",
             created=int(time.time()),
             model=model,
@@ -50,7 +53,7 @@ class ResponseHandler:
             usage=Usage(
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens or self._estimate_tokens(content),
-                total_tokens=prompt_tokens + completion_tokens,
+                total_tokens=prompt_tokens + (completion_tokens or self._estimate_tokens(content)),
             ),
         )
 

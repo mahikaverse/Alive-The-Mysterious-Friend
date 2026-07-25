@@ -17,12 +17,14 @@ APPROX_TOKENS_PER_CHAR = 0.25
 class RequestHandler:
     """Handles incoming request parsing and validation."""
 
-    def parse(self, body: ChatCompletionRequest) -> ConversationRequest:
+    def parse(self, body: ChatCompletionRequest, request_id: str = "") -> ConversationRequest:
         """Parse a validated ChatCompletionRequest into an internal context."""
         conversation_dicts = [m.model_dump() for m in body.messages]
         self._check_conversation_length(conversation_dicts)
 
         current = body.messages[-1].content if body.messages else ""
+
+        logger.info("[%s] parsed %d messages, last role=%s", request_id, len(conversation_dicts), body.messages[-1].role if body.messages else "none")
 
         return ConversationRequest(
             conversation=conversation_dicts,
@@ -32,6 +34,7 @@ class RequestHandler:
                 "temperature": body.temperature,
                 "max_tokens": body.max_tokens,
                 "stream": body.stream,
+                "request_id": request_id,
             },
         )
 
