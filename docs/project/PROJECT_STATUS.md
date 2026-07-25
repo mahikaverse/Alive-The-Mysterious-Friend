@@ -8,7 +8,7 @@
 
 **Project Version:** v1.0
 
-**Overall Progress:** 15%
+**Overall Progress:** 20%
 
 ---
 
@@ -86,6 +86,7 @@ None
 - Development Plans
 - AI Prompts
 - Backend Foundation (FastAPI server, health endpoint, chat completions endpoint, middleware, logging, orchestrator skeleton)
+- API Contract Layer (enhanced Pydantic models with validators, custom HTTP exceptions, service interfaces, centralized exception handlers, pipeline context)
 
 ---
 

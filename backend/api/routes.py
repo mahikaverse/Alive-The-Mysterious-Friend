@@ -14,14 +14,18 @@ from backend.controllers.conversation_controller import ConversationController
 from backend.controllers.request_handler import RequestHandler
 from backend.controllers.response_handler import ResponseHandler
 from backend.models.requests import ChatCompletionRequest
-from backend.models.responses import ChatCompletionResponse
+from backend.models.responses import ChatCompletionResponse, ErrorResponse
 
 router = APIRouter()
 
 START_TIME = time.time()
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    summary="Health check",
+    description="Returns service status, version, and uptime.",
+)
 async def health() -> dict:
     """Health check endpoint returning service status."""
     return {
@@ -32,7 +36,18 @@ async def health() -> dict:
     }
 
 
-@router.post("/chat/completions", response_model=ChatCompletionResponse)
+@router.post(
+    "/chat/completions",
+    response_model=ChatCompletionResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Bad request"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
+        429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+    summary="Chat Completions",
+    description="OpenAI-compatible Chat Completions endpoint.",
+)
 async def chat_completions(
     body: ChatCompletionRequest,
     controller: ConversationController = Depends(get_conversation_controller),

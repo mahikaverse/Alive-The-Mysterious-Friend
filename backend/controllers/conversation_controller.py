@@ -3,133 +3,152 @@
 Central coordinator that invokes every cognitive module
 in the correct order to generate a response.
 
-Each pipeline step delegates to an external module via a
-placeholder interface. These will be wired to real
-implementations as other developers complete their modules.
+The orchestrator accepts optional service instances via constructor
+injection. When a service is not provided, a built-in placeholder
+behaviour is used so the pipeline can run end-to-end without all
+modules being implemented.
 """
 
 import logging
+from typing import Optional
 
-from backend.models.requests import ConversationRequest
-from backend.models.state import (
-    EmotionState,
-    LifeContext,
-    PersonaProfile,
-    RelationshipState,
+from backend.controllers.interfaces import (
+    EmotionEngine,
+    LLMProvider,
+    LifeSimulator,
+    MemoryEngine,
+    PersonaEngine,
+    PromptBuilder,
+    RelationshipEngine,
+    ResponseValidator,
 )
+from backend.models.requests import ConversationRequest
+from backend.models.state import PipelineContext
 
 logger = logging.getLogger(__name__)
 
 
 class ConversationController:
-    """Orchestrates the full request processing pipeline."""
+    """Orchestrates the full request processing pipeline.
+
+    Inject real implementations of each service as they become
+    available. When None, a safe placeholder default is used.
+    """
+
+    def __init__(
+        self,
+        memory: Optional[MemoryEngine] = None,
+        emotion: Optional[EmotionEngine] = None,
+        relationship: Optional[RelationshipEngine] = None,
+        life: Optional[LifeSimulator] = None,
+        persona: Optional[PersonaEngine] = None,
+        prompt_builder: Optional[PromptBuilder] = None,
+        llm: Optional[LLMProvider] = None,
+        validator: Optional[ResponseValidator] = None,
+    ) -> None:
+        self._memory = memory
+        self._emotion = emotion
+        self._relationship = relationship
+        self._life = life
+        self._persona = persona
+        self._prompt_builder = prompt_builder
+        self._llm = llm
+        self._validator = validator
 
     async def process_request(self, request: ConversationRequest) -> dict:
-        """Execute the cognitive pipeline and return a response."""
-        context = await self._parse_conversation(request)
-        context = await self._retrieve_memories(context)
-        context = await self._update_emotion(context)
-        context = await self._update_relationship(context)
-        context = await self._retrieve_life_events(context)
-        context = await self._retrieve_persona(context)
-        prompt = await self._build_prompt(context)
-        raw_response = await self._generate_response(prompt)
-        validated = await self._validate_response(raw_response, context)
-        await self._store_memories(context, validated)
+        """Execute the cognitive pipeline and return a response dict."""
+        ctx = PipelineContext(
+            conversation=request.conversation,
+            current_message=request.current_message,
+            metadata=request.metadata,
+        )
+
+        ctx = await self._step_parse(ctx)
+        ctx = await self._step_retrieve_memories(ctx)
+        ctx = await self._step_update_emotion(ctx)
+        ctx = await self._step_update_relationship(ctx)
+        ctx = await self._step_retrieve_life_events(ctx)
+        ctx = await self._step_retrieve_persona(ctx)
+        prompt = await self._step_build_prompt(ctx)
+        raw = await self._step_generate(prompt)
+        validated = await self._step_validate(raw, ctx)
+        await self._step_store_memories(ctx, validated)
 
         return {"content": validated}
 
-    async def _parse_conversation(self, request: ConversationRequest) -> dict:
-        """Extract and validate conversation context from the incoming request."""
+    # ------------------------------------------------------------------
+    # Pipeline steps
+    # ------------------------------------------------------------------
+
+    async def _step_parse(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("parsing conversation")
-        return {
-            "conversation": request.conversation,
-            "current_message": request.current_message,
-            "metadata": request.metadata,
-        }
+        return ctx
 
-    async def _retrieve_memories(self, context: dict) -> dict:
-        """Retrieve relevant memories from the Memory Vault.
-
-        Placeholder — returns empty list.
-        Will be wired to backend.memory.memory_manager.MemoryManager.
-        """
+    async def _step_retrieve_memories(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("retrieving memories")
-        context["memories"] = []
-        return context
+        if self._memory is not None:
+            ctx.memories = self._memory.retrieve(ctx.conversation, ctx.current_message)
+        return ctx
 
-    async def _update_emotion(self, context: dict) -> dict:
-        """Update the emotional state based on the current conversation.
-
-        Placeholder — returns default emotion state.
-        Will be wired to backend.behaviour.emotion_engine.EmotionEngine.
-        """
+    async def _step_update_emotion(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("updating emotion")
-        context["emotion"] = EmotionState().model_dump()
-        return context
+        if self._emotion is not None:
+            result = self._emotion.update(
+                ctx.emotion.model_dump(),
+                ctx.current_message,
+                ctx.conversation,
+            )
+            ctx.emotion = ctx.emotion.__class__(**result)
+        return ctx
 
-    async def _update_relationship(self, context: dict) -> dict:
-        """Update the bond/relationship state.
-
-        Placeholder — returns default relationship state.
-        Will be wired to backend.behaviour.relationship_engine.RelationshipEngine.
-        """
+    async def _step_update_relationship(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("updating relationship")
-        context["relationship"] = RelationshipState().model_dump()
-        return context
+        if self._relationship is not None:
+            result = self._relationship.update(ctx.current_message, ctx.emotion.model_dump())
+            ctx.relationship = ctx.relationship.__class__(**result)
+        return ctx
 
-    async def _retrieve_life_events(self, context: dict) -> dict:
-        """Retrieve recent life simulation events.
-
-        Placeholder — returns empty life context.
-        Will be wired to backend.behaviour.life_simulator.LifeSimulator.
-        """
+    async def _step_retrieve_life_events(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("retrieving life events")
-        context["life_events"] = LifeContext().model_dump()
-        return context
+        if self._life is not None:
+            ctx.life_events.recent_activities = self._life.get_recent_events()
+        return ctx
 
-    async def _retrieve_persona(self, context: dict) -> dict:
-        """Retrieve the current identity / persona profile.
-
-        Placeholder — returns default persona.
-        Will be wired to backend.core.identity_engine.IdentityEngine.
-        """
+    async def _step_retrieve_persona(self, ctx: PipelineContext) -> PipelineContext:
         logger.info("retrieving persona")
-        context["persona"] = PersonaProfile().model_dump()
-        return context
+        if self._persona is not None:
+            result = self._persona.get_persona()
+            ctx.persona = ctx.persona.__class__(**result)
+        return ctx
 
-    async def _build_prompt(self, context: dict) -> str:
-        """Build the master prompt for the language model.
-
-        Placeholder — returns a simple prompt.
-        Will be wired to backend.core.prompt_builder.PromptBuilder.
-        """
+    async def _step_build_prompt(self, ctx: PipelineContext) -> str:
         logger.info("building prompt")
-        msg = context.get("current_message", "")
-        return f"Continue the conversation naturally.\nUser: {msg}\nAlive:"
+        if self._prompt_builder is not None:
+            return self._prompt_builder.build_prompt(
+                persona=ctx.persona.model_dump(),
+                emotion=ctx.emotion.model_dump(),
+                memories=ctx.memories,
+                relationships=ctx.relationship.model_dump(),
+                life_events=ctx.life_events.recent_activities,
+                conversation=ctx.conversation,
+            )
+        return f"Continue the conversation naturally.\nUser: {ctx.current_message}\nAlive:"
 
-    async def _generate_response(self, prompt: str) -> str:
-        """Send the prompt to the LLM and return the raw response.
-
-        Placeholder — returns a canned response.
-        Will be wired to backend.core.llm_provider.LLMProvider.
-        """
+    async def _step_generate(self, prompt: str) -> str:
         logger.info("generating response")
+        if self._llm is not None:
+            return self._llm.generate(prompt)
         return "Hey! It's nice to meet you."
 
-    async def _validate_response(self, response: str, context: dict) -> str:
-        """Validate the generated response for consistency and safety.
-
-        Placeholder — passes through unchanged.
-        Will be wired to backend.core.response_validator.ResponseValidator.
-        """
+    async def _step_validate(self, response: str, ctx: PipelineContext) -> str:
         logger.info("validating response")
+        if self._validator is not None:
+            passed = self._validator.validate(response, ctx.model_dump())
+            if not passed:
+                logger.warning("response failed validation")
         return response
 
-    async def _store_memories(self, context: dict, response: str) -> None:
-        """Persist new memories derived from the conversation.
-
-        Placeholder — no-op.
-        Will be wired to backend.memory.memory_manager.MemoryManager.
-        """
+    async def _step_store_memories(self, ctx: PipelineContext, response: str) -> None:
         logger.info("storing memories")
+        if self._memory is not None:
+            self._memory.store(ctx.conversation, response)

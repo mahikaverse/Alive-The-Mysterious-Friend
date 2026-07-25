@@ -48,6 +48,7 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 
 - Docker configuration.
 - Deployment configuration.
+- Add authentication / API key validation middleware.
 
 ---
 
