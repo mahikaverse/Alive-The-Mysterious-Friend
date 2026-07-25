@@ -1,15 +1,18 @@
 """FastAPI application factory.
 
 Creates and configures the FastAPI application instance
-with middleware, exception handlers, and router registration.
+with middleware, exception handlers, lifecycle hooks,
+and environment-aware setup.
 """
 
 import logging
+import sys
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from backend import __app_name__, __description__, __version__
 from backend.api.exceptions import (
     AppException,
     BadRequestException,
@@ -21,7 +24,7 @@ from backend.api.exceptions import (
 from backend.api.middleware import RequestContextMiddleware
 from backend.api.routes import router
 from backend.config.log_config import setup_logging
-from backend.config.settings import settings
+from backend.config.settings import settings, validate_settings
 from backend.controllers.conversation_controller import ConversationController
 
 logger = logging.getLogger(__name__)
@@ -32,11 +35,11 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(
-        title="Alive - The Mysterious Friend",
-        description="A Human Simulation System for Masquerade '26 - The Turing Challenge",
-        version="1.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
+        title=__app_name__,
+        description=__description__,
+        version=__version__,
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
     )
 
     # --- middleware ---
@@ -51,6 +54,7 @@ def create_app() -> FastAPI:
 
     # --- singleton services ---
     app.state.orchestrator = ConversationController()
+    app.state.start_time = __import__("time").time()
 
     # --- exception handlers ---
     @app.exception_handler(BadRequestException)
@@ -93,11 +97,28 @@ def create_app() -> FastAPI:
     # --- lifecycle ---
     @app.on_event("startup")
     async def on_startup() -> None:
-        logger.info("Alive server starting")
+        logger.info(
+            "%s v%s starting — environment=%s",
+            __app_name__,
+            __version__,
+            settings.environment,
+        )
+        missing = validate_settings()
+        if missing:
+            logger.warning("Missing recommended settings: %s", ", ".join(missing))
+            if settings.is_production:
+                logger.error(
+                    "Required settings missing in production: %s. Application may not function correctly.",
+                    ", ".join(missing),
+                )
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
-        logger.info("Alive server shutting down")
+        logger.info(
+            "%s v%s shutting down",
+            __app_name__,
+            __version__,
+        )
 
     # --- routes ---
     app.include_router(router)

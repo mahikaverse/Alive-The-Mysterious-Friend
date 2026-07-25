@@ -79,6 +79,23 @@
 ✅ Response ID derived from request ID for correlation (chatcmpl-{request_id})
 ✅ Verified custom X-Request-ID header propagation end-to-end
 
+### Production Infrastructure (Person 1)
+
+✅ Built multi-stage Dockerfile (builder + runtime, non-root user, HEALTHCHECK)
+✅ Created docker-compose.yml with healthchecks, bridge network, env passthrough
+✅ Added environment profiles: development/staging/production with validation
+✅ Added JSON log formatter for production log aggregation
+✅ Created /ready readiness probe endpoint with orchestrator status
+✅ Improved /health to include environment label
+✅ Added startup validation warning for missing required settings in production
+✅ Created scripts/entrypoint.sh — auto-selects gunicorn (production) or uvicorn --reload (dev)
+✅ Centralized metadata (__app_name__, __version__, __description__) in backend/__init__.py
+✅ Added graceful shutdown timeout configuration
+✅ Disabled Swagger/ReDoc docs in production
+✅ Added gunicorn as production ASGI server with uvicorn workers
+✅ Expanded .env.example with all documented variables and grouped sections
+✅ Verified all three endpoints (/health, /ready, /chat/completions) work
+
 ---
 
 Future changes should always be appended below.

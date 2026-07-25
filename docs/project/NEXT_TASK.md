@@ -46,9 +46,8 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 
 ## Person 1
 
-- Docker configuration.
-- Deployment configuration.
 - Add authentication / API key validation middleware.
+- Monitoring and metrics endpoint.
 
 ---
 

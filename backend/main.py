@@ -18,4 +18,5 @@ if __name__ == "__main__":
         port=settings.port,
         reload=settings.debug,
         log_level=settings.log_level.lower() if settings.log_level else "info",
+        timeout_graceful_shutdown=settings.shutdown_timeout,
     )

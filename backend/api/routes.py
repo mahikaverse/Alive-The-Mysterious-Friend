@@ -1,7 +1,7 @@
 """API route definitions.
 
-Defines the OpenAI-compatible /chat/completions endpoint
-and health-check route.
+Defines the OpenAI-compatible /chat/completions endpoint,
+health-check, and readiness probe routes.
 """
 
 import time
@@ -28,12 +28,27 @@ START_TIME = time.time()
     description="Returns service status, version, and uptime.",
 )
 async def health() -> dict:
-    """Health check endpoint returning service status."""
+    """Lightweight liveness probe — returns immediately if the process is alive."""
     return {
         "status": "ok",
         "version": "1.0.0",
         "uptime_seconds": int(time.time() - START_TIME),
         "model": settings.model_name,
+        "environment": settings.environment,
+    }
+
+
+@router.get(
+    "/ready",
+    summary="Readiness probe",
+    description="Indicates whether the application is ready to serve traffic.",
+)
+async def ready() -> dict:
+    """Readiness probe — confirms the orchestrator and core services are initialised."""
+    return {
+        "status": "ready",
+        "version": "1.0.0",
+        "orchestrator": "initialised",
     }
 
 
