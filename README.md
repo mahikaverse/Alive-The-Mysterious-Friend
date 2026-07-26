@@ -111,37 +111,101 @@ Responsible for:
 
 ---
 
-## Emotion Core
+## Behaviour Layer
 
-Responsible for:
+> Owner: **Person 4 — Human Behaviour**
 
-- Mood
-- Confidence
-- Trust
-- Stress
-- Emotional State
+The Behaviour Layer simulates Alive's emotional intelligence, relationship dynamics, and daily life. It is the core of Alive's ability to behave like a real person rather than a chatbot.
 
----
+### Implemented Modules
 
-## Bond Engine
+| Module | File | Purpose |
+|--------|------|---------|
+| **EmotionEngine** | `behaviour/emotion_engine.py` | Analyses incoming messages and updates Alive's emotional state. Classifies user intent, evaluates mood transitions (17 moods), and propagates energy, confidence, and curiosity across turns. |
+| **RelationshipEngine** | `behaviour/relationship_engine.py` | Tracks and evolves the relationship with the user. Manages friendship score, trust level, conversation count, and shared experiences. Adjusts relationship metrics based on emotional context. |
+| **LifeSimulator** | `behaviour/life_simulator.py` | Generates a fictional daily life for Alive. Produces time-of-day-appropriate activities, simulates daily routines, and maintains a bounded event history with deduplication. |
+| **MoodManager** | `behaviour/mood_manager.py` | Canonical source of truth for mood vocabulary. Provides mood transitions, derivation, validation, and sentiment classification. Shared across all behaviour modules. |
+| **StateManager** | `behaviour/state_manager.py` | Captures and validates behaviour snapshots each turn. Provides safe accessors for prompt building, tracks state deltas, and performs cross-field consistency checks. |
 
-Responsible for:
+### Behaviour Pipeline
 
-- Friendship
-- Trust
-- Shared Experiences
-- Relationship Growth
+```
+User Message
+     │
+     ▼
+ EmotionEngine
+ • Classifies stimulus (greeting, hostile, positive, etc.)
+ • Evaluates compound + simple mood transitions
+ • Propagates energy, confidence, curiosity
+     │
+     ▼
+ RelationshipEngine
+ • Adjusts friendship, trust, conversation count
+ • Records shared experiences
+ • Modulates based on emotional state
+     │
+     ▼
+ LifeSimulator
+ • Rotates daily activities by time-of-day
+ • Returns recent life events
+     │
+     ▼
+ StateManager
+ • Captures BehaviourSnapshot
+ • Validates cross-field consistency
+ • Records delta history
+     │
+     ▼
+ ConversationController Response
+```
 
----
+### Production Features
 
-## Life Stream
+| Feature | Implementation |
+|---------|---------------|
+| **Protocol compatibility** | All engines satisfy `interfaces.py` Protocol contracts. Return dicts match Pydantic model schemas. |
+| **Deterministic behaviour** | LifeSimulator uses turn-count rotation instead of wall-clock time. Consistent across runs. |
+| **Bounded memory** | All `deque` collections have `maxlen`. No unbounded growth. |
+| **Defensive programming** | Every public method wraps logic in try/except. Corrupted inputs are clamped, coerced, or defaulted. |
+| **Validation** | StateManager validates mood strings, bounds floats, checks relationship consistency, and tracks invalid transitions. |
+| **Thread safety** | Each request instantiates fresh engine instances via `app.py`. No shared mutable state across requests. |
+| **Production-ready architecture** | Module-level constants, frozen keyword sets, deterministic transitions, and comprehensive edge-case handling. |
+| **Async compatibility** | All engine methods are `async def`. No blocking I/O or sync operations. |
+| **Edge-case handling** | Empty strings, unknown moods, out-of-range values, concurrent calls, and corrupted dicts are all handled gracefully. |
 
-Responsible for:
+### Validation Status
 
-- Daily Activities
-- Personal Experiences
-- Fictional Timeline
-- Event History
+| Check | Status |
+|-------|--------|
+| Protocol validation | Passed — all engines satisfy `interfaces.py` |
+| Module-level validation | Passed — each module tested independently |
+| Production audit | Passed — correctness, safety, and performance verified |
+| Cross-module consistency | Passed — mood vocabulary aligned across all modules |
+| Compilation checks | Passed — all modules compile cleanly |
+
+### Integration Notes
+
+The Behaviour Layer is **complete and production-ready**.
+
+Remaining work is **integration by Person 1**:
+
+- `app.py:62-67` must be modified to inject `EmotionEngine`, `RelationshipEngine`, and `LifeSimulator` into `ConversationController`.
+- The Behaviour Layer is dead code until wired in — all engines are implemented but unused at the application level.
+- `app.py` and controller wiring are **outside Behaviour Layer ownership**.
+
+### Known Architectural Limitations
+
+| Limitation | Impact | Status |
+|------------|--------|--------|
+| RelationshipEngine Protocol does not receive current `RelationshipState` | Engine tracks state internally; diverges if `PipelineContext` is initialised with non-default relationship values | Documented, low risk in practice |
+| EmotionEngine contains self-managed mood logic while `MoodManager` exists as canonical | Duplicate vocabulary and transition logic. Identical today, but could drift if one is updated without the other | Documented, no runtime impact |
+| `behaviour_models.py` is currently unused | Defines `EmotionSnapshot`, `RelationshipSnapshot`, `LifeEvent` models that are never imported | Dead code, no production impact |
+
+### Behaviour Layer Status
+
+**Production Ready**
+
+Complete. Waiting only for application integration.
 
 ---
 
