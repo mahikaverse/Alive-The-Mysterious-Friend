@@ -1,5 +1,5 @@
 """API layer.
 
 Responsible for HTTP routing, request validation,
-and response formatting.
+middleware, and dependency injection.
 """

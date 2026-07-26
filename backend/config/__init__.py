@@ -1,5 +1,5 @@
 """Configuration package.
 
 Manages environment variables, application settings,
-and logging configuration.
+and logging configuration for the entire application.
 """

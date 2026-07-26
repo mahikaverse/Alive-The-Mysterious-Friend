@@ -2,60 +2,197 @@
 
 Central coordinator that invokes every cognitive module
 in the correct order to generate a response.
+
+Lifecycle (per ARCHITECTURE.md and INTEGRATION.md):
+  1. Parse conversation
+  2. Retrieve memories       (MemoryEngine)
+  3. Update emotion           (EmotionEngine)
+  4. Update relationship      (RelationshipEngine)
+  5. Retrieve life events     (LifeSimulator)
+  6. Retrieve persona         (PersonaEngine)
+  7. Build master prompt      (PromptBuilder)
+  8. Generate response        (LLMProvider)
+  9. Validate response        (ResponseValidator)
+  10. Store new memories      (MemoryEngine)
+
+Every step is wrapped in error handling so that a single
+module failure never crashes the entire pipeline.
 """
 
 import logging
+import time
+from typing import Optional
+
+from backend.controllers.interfaces import (
+    EmotionEngine,
+    LLMProvider,
+    LifeSimulator,
+    MemoryEngine,
+    PersonaEngine,
+    PromptBuilder,
+    RelationshipEngine,
+    ResponseValidator,
+)
+from backend.models.requests import ConversationRequest
+from backend.models.state import PipelineContext
+from backend.utils.request_context import get_current_request_id
 
 logger = logging.getLogger(__name__)
 
 
 class ConversationController:
-    """Orchestrates the full request processing pipeline."""
+    """Orchestrates the full request processing pipeline.
 
-    def __init__(self):
-        """Initialize the orchestrator with all cognitive module references."""
-        pass
+    Inject real implementations of each service as they become
+    available. When None, a safe placeholder default is used.
+    """
 
-    async def process_request(self, request):
-        """Execute the cognitive pipeline and return a response."""
-        pass
+    def __init__(
+        self,
+        memory: Optional[MemoryEngine] = None,
+        emotion: Optional[EmotionEngine] = None,
+        relationship: Optional[RelationshipEngine] = None,
+        life: Optional[LifeSimulator] = None,
+        persona: Optional[PersonaEngine] = None,
+        prompt_builder: Optional[PromptBuilder] = None,
+        llm: Optional[LLMProvider] = None,
+        validator: Optional[ResponseValidator] = None,
+    ) -> None:
+        self._memory = memory
+        self._emotion = emotion
+        self._relationship = relationship
+        self._life = life
+        self._persona = persona
+        self._prompt_builder = prompt_builder
+        self._llm = llm
+        self._validator = validator
 
-    async def _parse_conversation(self, request):
-        """Extract and validate conversation context from the incoming request."""
-        pass
+    async def process_request(self, request: ConversationRequest) -> dict:
+        """Execute the cognitive pipeline and return a response dict."""
+        pipeline_start = time.perf_counter()
+        rid = get_current_request_id()
 
-    async def _retrieve_memories(self, context):
-        """Retrieve relevant memories from the Memory Vault."""
-        pass
+        ctx = PipelineContext(
+            request_id=rid,
+            conversation=request.conversation,
+            current_message=request.current_message,
+            metadata=request.metadata,
+        )
 
-    async def _update_emotion(self, context):
-        """Update the emotional state based on the current conversation."""
-        pass
+        logger.info("[%s] pipeline started — %d messages", rid, len(ctx.conversation))
 
-    async def _update_relationship(self, context):
-        """Update the bond/relationship state."""
-        pass
+        ctx = await self._safe_step("parse", ctx, self._step_parse)
+        ctx = await self._safe_step("retrieve_memories", ctx, self._step_retrieve_memories)
+        ctx = await self._safe_step("update_emotion", ctx, self._step_update_emotion)
+        ctx = await self._safe_step("update_relationship", ctx, self._step_update_relationship)
+        ctx = await self._safe_step("retrieve_life_events", ctx, self._step_retrieve_life_events)
+        ctx = await self._safe_step("retrieve_persona", ctx, self._step_retrieve_persona)
+        prompt = await self._safe_step("build_prompt", ctx, self._step_build_prompt, is_prompt=True)
+        raw = await self._safe_step("generate", ctx, self._step_generate, is_prompt=True, prompt_arg=prompt)
+        validated = await self._safe_step("validate", ctx, self._step_validate, is_prompt=True, prompt_arg=raw)
+        await self._safe_step("store_memories", ctx, self._step_store_memories, is_prompt=True, prompt_arg=validated)
 
-    async def _retrieve_life_events(self, context):
-        """Retrieve recent life simulation events."""
-        pass
+        elapsed = time.perf_counter() - pipeline_start
+        logger.info(
+            "[%s] pipeline finished — %.4fs total — response %d chars",
+            rid, elapsed, len(validated),
+        )
 
-    async def _retrieve_persona(self, context):
-        """Retrieve the current identity / persona profile."""
-        pass
+        return {"content": validated}
 
-    async def _build_prompt(self, context):
-        """Build the master prompt for the language model."""
-        pass
+    # ------------------------------------------------------------------
+    # Safe step wrapper
+    # ------------------------------------------------------------------
 
-    async def _generate_response(self, prompt):
-        """Send the prompt to the LLM and return the raw response."""
-        pass
+    async def _safe_step(self, name: str, ctx: PipelineContext, step_fn, is_prompt: bool = False, prompt_arg: str = "") -> PipelineContext | str:
+        """Execute a pipeline step with timing and error handling.
 
-    async def _validate_response(self, response):
-        """Validate the generated response for consistency and safety."""
-        pass
+        If the step raises, the error is logged and a fallback value
+        is returned so the pipeline can continue.
+        """
+        rid = ctx.request_id or get_current_request_id()
+        start = time.perf_counter()
+        try:
+            if is_prompt:
+                result = await step_fn(ctx, prompt_arg)
+            else:
+                result = await step_fn(ctx)
+            elapsed = time.perf_counter() - start
+            logger.info("[%s] step %s OK (%.4fs)", rid, name, elapsed)
+            return result
+        except Exception:
+            elapsed = time.perf_counter() - start
+            logger.exception("[%s] step %s FAILED after %.4fs — using fallback", rid, name, elapsed)
+            if is_prompt:
+                return prompt_arg or "[fallback response]"
+            return ctx
 
-    async def _store_memories(self, context, response):
-        """Persist new memories derived from the conversation."""
-        pass
+    # ------------------------------------------------------------------
+    # Pipeline steps
+    # ------------------------------------------------------------------
+
+    async def _step_parse(self, ctx: PipelineContext) -> PipelineContext:
+        return ctx
+
+    async def _step_retrieve_memories(self, ctx: PipelineContext) -> PipelineContext:
+        if self._memory is not None:
+            ctx.memories = await self._memory.retrieve(ctx.conversation, ctx.current_message)
+        return ctx
+
+    async def _step_update_emotion(self, ctx: PipelineContext) -> PipelineContext:
+        if self._emotion is not None:
+            result = await self._emotion.update(
+                ctx.emotion.model_dump(),
+                ctx.current_message,
+                ctx.conversation,
+            )
+            ctx.emotion = ctx.emotion.__class__(**result)
+        return ctx
+
+    async def _step_update_relationship(self, ctx: PipelineContext) -> PipelineContext:
+        if self._relationship is not None:
+            result = await self._relationship.update(
+                ctx.current_message,
+                ctx.emotion.model_dump(),
+            )
+            ctx.relationship = ctx.relationship.__class__(**result)
+        return ctx
+
+    async def _step_retrieve_life_events(self, ctx: PipelineContext) -> PipelineContext:
+        if self._life is not None:
+            ctx.life_events.recent_activities = await self._life.get_recent_events()
+        return ctx
+
+    async def _step_retrieve_persona(self, ctx: PipelineContext) -> PipelineContext:
+        if self._persona is not None:
+            result = await self._persona.get_persona()
+            ctx.persona = ctx.persona.__class__(**result)
+        return ctx
+
+    async def _step_build_prompt(self, ctx: PipelineContext, _unused: str = "") -> str:
+        if self._prompt_builder is not None:
+            return await self._prompt_builder.build_prompt(
+                persona=ctx.persona.model_dump(),
+                emotion=ctx.emotion.model_dump(),
+                memories=ctx.memories,
+                relationships=ctx.relationship.model_dump(),
+                life_events=ctx.life_events.recent_activities,
+                conversation=ctx.conversation,
+            )
+        return f"Continue the conversation naturally.\nUser: {ctx.current_message}\nAlive:"
+
+    async def _step_generate(self, ctx: PipelineContext, prompt: str = "") -> str:
+        if self._llm is not None:
+            return await self._llm.generate(prompt)
+        return "Hey! It's nice to meet you."
+
+    async def _step_validate(self, ctx: PipelineContext, response_text: str = "") -> str:
+        if self._validator is not None:
+            passed = await self._validator.validate(response_text, ctx.model_dump())
+            if not passed:
+                logger.warning("[%s] response failed validation — using anyway", ctx.request_id)
+        return response_text
+
+    async def _step_store_memories(self, ctx: PipelineContext, response_text: str = "") -> None:
+        if self._memory is not None:
+            await self._memory.store(ctx.conversation, response_text)
