@@ -10,7 +10,6 @@ In production: JSON format for log aggregation.
 import json
 import logging
 import sys
-from typing import override
 
 from backend.config.settings import settings
 from backend.utils.logging_context import RequestIDFilter

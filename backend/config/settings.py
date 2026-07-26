@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     # --- trusted hosts ---
     trusted_hosts: list[str] = Field(default=["*"], description="Allowed Host header values")
 
+    # --- memory & embeddings (Person 3) ---
+    embedding_model: str = Field(default="text-embedding-3-small", description="OpenAI embedding model name")
+    embedding_dimensions: int = Field(default=1536, description="Embedding vector dimensions")
+    chroma_path: str = Field(default="./chroma_db", description="ChromaDB persistent storage path")
+    chroma_collection: str = Field(default="alive_memories", description="ChromaDB collection name")
+    memory_top_k: int = Field(default=5, ge=1, le=50, description="Number of memories to retrieve per turn")
+    memory_importance_threshold: float = Field(default=0.5, ge=0.0, le=1.0, description="Minimum importance score to store a memory")
+
     @field_validator("environment")
     @classmethod
     def validate_environment(cls, v: str) -> str:

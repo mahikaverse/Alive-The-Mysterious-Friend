@@ -79,23 +79,33 @@ All Person 2 modules have been implemented, tested individually, and integrated 
 - ✅ Response Validator — Complete. Connected via ResponseValidatorAdapter.
 - ✅ Person 1 + Person 2 Pipeline Fully Wired — Intelligence layer is active in all 4 pipeline steps.
 
-### Status
-
-**The complete Person 1 → Person 2 → Person 4 pipeline is operational. All 8 cognitive module slots are populated (MemoryEngine awaits Person 3). Behaviour engines fire correctly in the pipeline — emotion classification, relationship updates, and life event seeding are active.**
-
-Remaining work:
-- 🟡 Person 3: Implement Memory Vault, embeddings, retrieval, importance scoring.
-- 🔵 End-to-end integration testing after all 4 persons are complete.
-
 ---
 
-## Person 3
+## Person 3 — ✅ Complete (Memory System + Database)
 
-- Design database schema.
-- Implement Memory Vault.
-- Create embedding pipeline.
-- Implement memory retrieval.
-- Implement importance scoring.
+All Person 3 tasks have been implemented and integrated:
+
+### Core Memory System
+- ✅ Database schema (SQLAlchemy ORM: MemoryRecord, ConversationLog)
+- ✅ Database connection management (DatabaseConnection with pool)
+- ✅ Memory Vault (MemoryStore — ChromaDB + PostgreSQL dual store)
+- ✅ Embedding pipeline (OpenAI text-embedding-3-small)
+- ✅ Memory retrieval (semantic + hybrid + tag search)
+- ✅ Importance scoring (heuristic keyword-based scoring)
+- ✅ Memory ranking (multi-factor: similarity + recency + importance)
+- ✅ Memory Manager (MemoryEngine Protocol implementation)
+
+### Integration
+- ✅ Integration into orchestrator (all 8 slots populated)
+- ✅ Async event loop wrapping (asyncio.to_thread)
+- ✅ Unit tests (6 test suites, all passing)
+
+### Infrastructure
+- ✅ Alembic migration infrastructure
+- ✅ Docker Compose ChromaDB volume for persistence
+
+Remaining:
+- 🔵 End-to-end integration testing after all 4 persons are complete.
 
 ---
 
@@ -116,15 +126,14 @@ All Person 4 modules have been implemented, tested, and integrated into the orch
 
 ---
 
-## Person 2
+## Person 2 — ✅ All Complete
 
 ---
 
 ## Person 3
 
-- Memory ranking.
-- Semantic search optimization.
-- Memory compression.
+- 🟡 Memory compression (optional enhancement)
+- 🔵 End-to-end integration testing
 
 ---
 
@@ -158,7 +167,7 @@ All Person 4 modules have been implemented, tested, and integrated into the orch
 
 ## Milestone 3
 
-⬜ Memory Working
+✅ Memory Working (MemoryManager with ChromaDB + PostgreSQL, embeddings, retrieval, ranking)
 
 ---
 
@@ -176,7 +185,7 @@ All Person 4 modules have been implemented, tested, and integrated into the orch
 
 ## Milestone 6
 
-⬜ End-to-End Integration
+⬜ End-to-End Integration (All modules wired — awaiting full pipeline test)
 
 ---
 
