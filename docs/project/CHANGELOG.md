@@ -166,6 +166,42 @@
 - ResponseValidatorAdapter — sync-to-async bridge via asyncio.to_thread
 - All adapters wired into ConversationController via app.py DI
 
+### Behaviour Layer — Integrated Into Orchestrator (Person 1)
+
+✅ Wired Person 4 behaviour modules into ConversationController via app.py (no adapters needed):
+- EmotionEngine — async, matches EmotionEngine Protocol, injected directly
+- RelationshipEngine — async, matches RelationshipEngine Protocol, injected directly
+- LifeSimulator — async, matches LifeSimulator Protocol, injected directly
+- No adapter wrappers required — Person 4 modules already implement async Protocols
+- All 3 modules injected into orchestrator alongside existing Person 2 modules
+- Verified: pipeline executes all 10 steps with behaviour modules active
+- Verified: emotion stimulus classification, relationship metric updates, and life event seeding all fire correctly in the pipeline
+- Graceful fallback on LLM step when no API key is configured (expected dev behavior)
+
+### Project Version Bump
+
+✅ Project version updated to v1.1
+✅ Overall progress updated to 80%
+✅ Behaviour modules marked complete and integrated in PROJECT_STATUS.md
+
+### Medium-Priority Features (Person 1)
+
+✅ Implemented `AuthMiddleware` in `backend/api/middleware.py`:
+- Checks `Authorization: Bearer <key>` on all non-public endpoints
+- No-op when `API_KEY` env var is empty (backward compatible)
+- Public paths: /health, /ready, /metrics, /docs, /redoc, /openapi.json
+- Returns 401 with standard error format on missing/invalid key
+- Registered after RequestContextMiddleware for request_id traceability
+
+✅ Implemented `MetricsCollector` in `backend/utils/metrics.py`:
+- Thread-safe in-memory counters: total requests, errors, latency
+- Requests broken down by path and status code
+- Averaged latency calculation
+- Exposed via `GET /metrics` endpoint (public, no auth required)
+- Integrated into RequestContextMiddleware for automatic recording
+
+✅ Updated `.env.example` with `API_KEY` variable documentation
+
 Future changes should always be appended below.
 
 Never modify previous entries.

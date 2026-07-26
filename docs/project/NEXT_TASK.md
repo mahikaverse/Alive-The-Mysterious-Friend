@@ -12,7 +12,7 @@ Only work on the highest priority task assigned to you unless instructed otherwi
 
 # 🔴 High Priority
 
-## Person 1 — ✅ All Tasks Complete (Backend Infrastructure)
+## Person 1 — ✅ All Tasks Complete (Backend Infrastructure + Behaviour Integration)
 
 All Person 1 tasks have been completed and verified:
 
@@ -59,6 +59,13 @@ All Person 1 tasks have been completed and verified:
 - ✅ Graceful shutdown timeout configuration
 - ✅ Swagger/ReDoc disabled in production
 
+### Behaviour Layer Integration (Person 1 → Person 4)
+- ✅ EmotionEngine wired into orchestrator — async, matches Protocol, no adapter needed
+- ✅ RelationshipEngine wired into orchestrator — async, matches Protocol, no adapter needed
+- ✅ LifeSimulator wired into orchestrator — async, matches Protocol, no adapter needed
+- ✅ All 3 modules injected via app.py, alongside existing Person 2 adapters
+- ✅ Pipeline verified — emotion classification, relationship updates, life event seeding all fire correctly
+
 ---
 
 ## Person 2 — ✅ Fully Integrated Into Backend Pipeline
@@ -74,13 +81,11 @@ All Person 2 modules have been implemented, tested individually, and integrated 
 
 ### Status
 
-**The complete Person 1 → Person 2 pipeline is operational. All cognitive modules are wired into the orchestrator with proper async adapters.**
+**The complete Person 1 → Person 2 → Person 4 pipeline is operational. All 8 cognitive module slots are populated (MemoryEngine awaits Person 3). Behaviour engines fire correctly in the pipeline — emotion classification, relationship updates, and life event seeding are active.**
 
-Remaining work for other team members:
-
-- 🟡 Person 3: Implement Memory Vault to provide memory context.
-- 🟡 Person 4: Implement Emotion Core, Bond Engine, Life Stream.
-- 🔵 End-to-end integration testing across all 4 persons.
+Remaining work:
+- 🟡 Person 3: Implement Memory Vault, embeddings, retrieval, importance scoring.
+- 🔵 End-to-end integration testing after all 4 persons are complete.
 
 ---
 
@@ -94,22 +99,20 @@ Remaining work for other team members:
 
 ---
 
-## Person 4
+## Person 4 — ✅ Complete (Code + Integration)
 
-- Design Emotion Core.
-- Design Bond Engine.
-- Design Life Stream.
-- Implement emotional state model.
-- Implement relationship state model.
+All Person 4 modules have been implemented, tested, and integrated into the orchestrator:
+- ✅ EmotionEngine — implemented, async Protocol-compatible, wired into orchestrator
+- ✅ RelationshipEngine — implemented, async Protocol-compatible, wired into orchestrator
+- ✅ LifeSimulator — implemented, async Protocol-compatible, wired into orchestrator
+- ✅ MoodManager — canonical mood vocabulary shared across all behaviour modules
+- ✅ StateManager — internal behaviour-layer state validation utility
 
 ---
 
 # 🟡 Medium Priority
 
-## Person 1
-
-- Add authentication / API key validation middleware.
-- Monitoring and metrics endpoint.
+## Person 1 — ✅ All Complete
 
 ---
 
@@ -125,11 +128,7 @@ Remaining work for other team members:
 
 ---
 
-## Person 4
-
-- Mood transitions.
-- Behaviour adaptation.
-- Daily routine generation.
+## Person 4 — ✅ Complete
 
 ---
 
@@ -165,13 +164,13 @@ Remaining work for other team members:
 
 ## Milestone 4
 
-⬜ Behaviour Working
+✅ Behaviour Working (EmotionEngine, RelationshipEngine, LifeSimulator integrated)
 
 ---
 
 ## Milestone 5
 
-⬜ Intelligence Working
+✅ Intelligence Working (IdentityEngine, PromptBuilder, LLMProvider, ResponseValidator integrated)
 
 ---
 

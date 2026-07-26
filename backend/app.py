@@ -21,11 +21,14 @@ from backend.api.exceptions import (
     RateLimitException,
     UnauthorizedException,
 )
-from backend.api.middleware import RequestContextMiddleware
+from backend.api.middleware import AuthMiddleware, RequestContextMiddleware
 from backend.api.routes import router
 from backend.config.log_config import setup_logging
 from backend.config.settings import settings, validate_settings
 from backend.controllers.conversation_controller import ConversationController
+from backend.behaviour.emotion_engine import EmotionEngine
+from backend.behaviour.life_simulator import LifeSimulator
+from backend.behaviour.relationship_engine import RelationshipEngine
 from backend.controllers.module_adapters import (
     IdentityEngineAdapter,
     LLMProviderAdapter,
@@ -48,7 +51,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if not settings.is_production else None,
     )
 
-    # --- middleware ---
+    # --- middleware (order matters) ---
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -57,9 +60,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(RequestContextMiddleware)
+    app.add_middleware(AuthMiddleware)
 
     # --- singleton services ---
     app.state.orchestrator = ConversationController(
+        emotion=EmotionEngine(),
+        relationship=RelationshipEngine(),
+        life=LifeSimulator(),
         persona=IdentityEngineAdapter(),
         prompt_builder=PromptBuilderAdapter(),
         llm=LLMProviderAdapter(),
