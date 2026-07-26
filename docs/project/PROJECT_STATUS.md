@@ -6,15 +6,15 @@
 
 **Last Updated:** 26 July 2026
 
-**Project Version:** v1.0
+**Project Version:** v1.1
 
-**Overall Progress:** 50%
+**Overall Progress:** 80%
 
 ---
 
 # Current Phase
 
-🟢 Person 1 + Person 2 — Fully Integrated Pipeline (Intelligence Layer Wired into Orchestrator)
+🟢 Person 1 + Person 2 + Person 4 — Fully Integrated Pipeline (Behaviour Layer Wired into Orchestrator)
 
 ---
 
@@ -33,9 +33,9 @@
 | Embeddings | Person 3 | ⏳ Not Started | ❌ | ❌ |
 | Memory Retrieval | Person 3 | ⏳ Not Started | ❌ | ❌ |
 | Database Layer | Person 3 | ⏳ Not Started | ❌ | ❌ |
-| Emotion Core | Person 4 | ⏳ Not Started | ❌ | ❌ |
-| Bond Engine | Person 4 | ⏳ Not Started | ❌ | ❌ |
-| Life Stream | Person 4 | ⏳ Not Started | ❌ | ❌ |
+| Emotion Core | Person 4 | ✅ Complete | ✅ | ✅ |
+| Bond Engine | Person 4 | ✅ Complete | ✅ | ✅ |
+| Life Stream | Person 4 | ✅ Complete | ✅ | ✅ |
 
 ---
 
@@ -67,17 +67,17 @@ None
 | Module | Status |
 |----------|----------|
 | API | ✅ Running |
-| Orchestrator Pipeline | ✅ Fully Wired (IdentityEngine, PromptBuilder, LLMProvider, ResponseValidator) |
-| Memory | Waiting |
-| Behaviour | Waiting |
+| Orchestrator Pipeline | ✅ Fully Wired (all 8 module slots populated: MemoryEngine[None], EmotionEngine, RelationshipEngine, LifeSimulator, IdentityEngine, PromptBuilder, LLMProvider, ResponseValidator) |
+| Memory | ⏳ Waiting (Person 3) |
+| Behaviour | ✅ Integrated (EmotionEngine, RelationshipEngine, LifeSimulator) |
 | Intelligence | ✅ Integrated |
 
 ---
 
 # Pending Tasks
 
-- Memory design (Person 3)
-- Behaviour design (Person 4)
+- Memory design and integration (Person 3)
+- End-to-end integration testing across all 4 persons
 
 ---
 
@@ -100,6 +100,9 @@ None
 - Response Validator
 - Person 2 Integration Pipeline
 - Person 2 Module Adapters (sync→async bridge, type conversion, wired into orchestrator)
+- Person 4 Behaviour Modules Integrated (EmotionEngine, RelationshipEngine, LifeSimulator wired into orchestrator via app.py)
+- API Key Authentication Middleware (AuthMiddleware with Bearer token, no-op when key is empty, public paths exempt)
+- Metrics Collector + /metrics Endpoint (in-memory request counters by path/status with latency tracking)
 
 ---
 

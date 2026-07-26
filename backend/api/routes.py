@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 from starlette.requests import Request
 
 from backend.api.dependencies import get_conversation_controller
+from backend.utils.metrics import metrics_collector
 from backend.config.settings import settings
 from backend.controllers.conversation_controller import ConversationController
 from backend.controllers.request_handler import RequestHandler
@@ -50,6 +51,16 @@ async def ready() -> dict:
         "version": "1.0.0",
         "orchestrator": "initialised",
     }
+
+
+@router.get(
+    "/metrics",
+    summary="Application metrics",
+    description="In-memory request metrics for monitoring and diagnostics.",
+)
+async def metrics() -> dict:
+    """Return a snapshot of request metrics collected since startup."""
+    return metrics_collector.snapshot()
 
 
 @router.post(
