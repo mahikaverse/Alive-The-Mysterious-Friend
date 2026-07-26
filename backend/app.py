@@ -26,6 +26,12 @@ from backend.api.routes import router
 from backend.config.log_config import setup_logging
 from backend.config.settings import settings, validate_settings
 from backend.controllers.conversation_controller import ConversationController
+from backend.controllers.module_adapters import (
+    IdentityEngineAdapter,
+    LLMProviderAdapter,
+    PromptBuilderAdapter,
+    ResponseValidatorAdapter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +59,12 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestContextMiddleware)
 
     # --- singleton services ---
-    app.state.orchestrator = ConversationController()
+    app.state.orchestrator = ConversationController(
+        persona=IdentityEngineAdapter(),
+        prompt_builder=PromptBuilderAdapter(),
+        llm=LLMProviderAdapter(),
+        validator=ResponseValidatorAdapter(),
+    )
     app.state.start_time = __import__("time").time()
 
     # --- exception handlers ---

@@ -157,6 +157,15 @@
 
 ---
 
+### Intelligence Layer — Integrated Into Orchestrator (Person 1)
+
+✅ Created adapter wrappers in controllers/module_adapters.py (no modifications to Person 2's code):
+- IdentityEngineAdapter — async wrapper, returns dict from PersonaProfile
+- PromptBuilderAdapter — converts orchestrator dicts to typed Pydantic objects
+- LLMProviderAdapter — sync-to-async bridge via asyncio.to_thread
+- ResponseValidatorAdapter — sync-to-async bridge via asyncio.to_thread
+- All adapters wired into ConversationController via app.py DI
+
 Future changes should always be appended below.
 
 Never modify previous entries.

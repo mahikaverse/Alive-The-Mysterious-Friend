@@ -4,7 +4,7 @@
 
 ## Project Status Dashboard
 
-**Last Updated:** 25 July 2026
+**Last Updated:** 26 July 2026
 
 **Project Version:** v1.0
 
@@ -14,7 +14,7 @@
 
 # Current Phase
 
-🟢 Person 1 + Person 2 — Backend Infrastructure and Intelligence Layer Complete
+🟢 Person 1 + Person 2 — Fully Integrated Pipeline (Intelligence Layer Wired into Orchestrator)
 
 ---
 
@@ -22,7 +22,6 @@
 
 | Module | Owner | Status | Tested | Integrated |
 |----------|----------|----------|----------|----------|
-<<<<<<< HEAD
 | Backend Infrastructure | Person 1 | ✅ Complete | ✅ | ✅ |
 | API Layer | Person 1 | ✅ Complete | ✅ | ✅ |
 | Identity Engine | Person 2 | ✅ Complete | ✅ | ✅ |
@@ -68,6 +67,7 @@ None
 | Module | Status |
 |----------|----------|
 | API | ✅ Running |
+| Orchestrator Pipeline | ✅ Fully Wired (IdentityEngine, PromptBuilder, LLMProvider, ResponseValidator) |
 | Memory | Waiting |
 | Behaviour | Waiting |
 | Intelligence | ✅ Integrated |
@@ -76,9 +76,8 @@ None
 
 # Pending Tasks
 
-- Memory design
-- Behaviour design
-- Prompt engineering
+- Memory design (Person 3)
+- Behaviour design (Person 4)
 
 ---
 
@@ -100,6 +99,7 @@ None
 - LLM Provider
 - Response Validator
 - Person 2 Integration Pipeline
+- Person 2 Module Adapters (sync→async bridge, type conversion, wired into orchestrator)
 
 ---
 
