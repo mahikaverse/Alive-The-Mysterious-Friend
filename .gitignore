@@ -32,3 +32,5 @@ chroma_data/
 # Logs
 *.log
 logs/
+
+chroma_db/

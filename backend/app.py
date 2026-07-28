@@ -35,6 +35,13 @@ from backend.controllers.module_adapters import (
     PromptBuilderAdapter,
     ResponseValidatorAdapter,
 )
+from backend.database.connection import DatabaseConnection
+from backend.memory.embeddings import Embeddings
+from backend.memory.importance import ImportanceScorer
+from backend.memory.memory_manager import MemoryManager
+from backend.memory.memory_store import MemoryStore
+from backend.memory.ranking import MemoryRanking
+from backend.memory.retrieval import MemoryRetrieval
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +70,45 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthMiddleware)
 
     # --- singleton services ---
+    # Database
+    db_connection = DatabaseConnection(settings.database_url)
+    try:
+        db_connection.connect()
+    except Exception as exc:
+        logger.warning("Database connection failed — memory will be disabled: %s", exc)
+
+    # Memory subsystem
+    memory_manager = None
+    try:
+        embeddings = Embeddings(
+            api_key=settings.openai_api_key,
+            model=settings.embedding_model,
+            dimensions=settings.embedding_dimensions,
+        )
+        memory_store = MemoryStore(
+            embeddings=embeddings,
+            db=db_connection,
+            chroma_path=settings.chroma_path,
+            collection_name=settings.chroma_collection,
+        )
+        retrieval = MemoryRetrieval(store=memory_store, embeddings=embeddings)
+        scorer = ImportanceScorer(threshold=settings.memory_importance_threshold)
+        ranking = MemoryRanking()
+        memory_manager = MemoryManager(
+            embeddings=embeddings,
+            store=memory_store,
+            retrieval=retrieval,
+            scorer=scorer,
+            ranking=ranking,
+            top_k=settings.memory_top_k,
+        )
+        logger.info("Memory subsystem initialized successfully")
+    except Exception as exc:
+        logger.warning("Memory subsystem initialization failed: %s", exc)
+
+    app.state.db = db_connection
     app.state.orchestrator = ConversationController(
+        memory=memory_manager,
         emotion=EmotionEngine(),
         relationship=RelationshipEngine(),
         life=LifeSimulator(),
@@ -137,6 +182,8 @@ def create_app() -> FastAPI:
             __app_name__,
             __version__,
         )
+        if hasattr(app.state, "db") and app.state.db is not None:
+            app.state.db.disconnect()
 
     # --- routes ---
     app.include_router(router)

@@ -6,7 +6,7 @@ FROM python:3.12-slim AS builder
 WORKDIR /build
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 # ──────────────────────────────────────────────
@@ -19,9 +19,8 @@ RUN groupadd -r alive && useradd --no-log-init -r -g alive alive
 
 WORKDIR /app
 
-# Copy installed dependencies from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+# Copy Python packages from builder
+COPY --from=builder /usr/local /usr/local
 
 # Copy application code
 COPY --chown=alive:alive backend/ backend/
