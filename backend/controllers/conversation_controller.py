@@ -19,6 +19,7 @@ Every step is wrapped in error handling so that a single
 module failure never crashes the entire pipeline.
 """
 
+import asyncio
 import logging
 import time
 from typing import Optional
@@ -66,6 +67,7 @@ class ConversationController:
         self._prompt_builder = prompt_builder
         self._llm = llm
         self._validator = validator
+        self._background_tasks: set[asyncio.Task] = set()
 
     async def process_request(self, request: ConversationRequest) -> dict:
         """Execute the cognitive pipeline and return a response dict."""
@@ -90,7 +92,7 @@ class ConversationController:
         prompt = await self._safe_step("build_prompt", ctx, self._step_build_prompt, is_prompt=True)
         raw = await self._safe_step("generate", ctx, self._step_generate, is_prompt=True, prompt_arg=prompt)
         validated = await self._safe_step("validate", ctx, self._step_validate, is_prompt=True, prompt_arg=raw)
-        await self._safe_step("store_memories", ctx, self._step_store_memories, is_prompt=True, prompt_arg=validated)
+        self._schedule_memory_store(ctx, validated)
 
         elapsed = time.perf_counter() - pipeline_start
         logger.info(
@@ -130,6 +132,29 @@ class ConversationController:
     # ------------------------------------------------------------------
     # Pipeline steps
     # ------------------------------------------------------------------
+
+    def _schedule_memory_store(self, ctx: PipelineContext, response_text: str) -> None:
+        """Persist memories in the background so storage never delays the reply.
+
+        Memory storage performs an embedding API call; waiting on it adds
+        latency to every response. Running it as a background task returns
+        the reply to the user immediately after generation.
+        """
+        if self._memory is None:
+            return
+
+        async def _store() -> None:
+            try:
+                await self._step_store_memories(ctx, response_text)
+            except Exception:
+                logger.exception(
+                    "[%s] background memory storage failed",
+                    ctx.request_id or get_current_request_id(),
+                )
+
+        task = asyncio.create_task(_store())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
 
     async def _step_parse(self, ctx: PipelineContext) -> PipelineContext:
         return ctx

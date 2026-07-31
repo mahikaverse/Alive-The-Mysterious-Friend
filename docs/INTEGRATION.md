@@ -291,12 +291,16 @@ Validate Response
 
 ↓
 
-Store Memory
+Store Memory (background task)
 
 ↓
 
 Return Response
 ```
+
+> **Note:** memory *storage* is scheduled as a background task and never
+> blocks the reply path. See `ConversationController._schedule_memory_store()`.
+> If storage fails, a warning is logged and the reply is still returned.
 
 ---
 

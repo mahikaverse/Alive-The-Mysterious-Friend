@@ -28,7 +28,7 @@ class ChatCompletionRequest(BaseModel):
     model: str = Field(..., min_length=1, description="Model identifier")
     messages: list[Message] = Field(..., min_length=1, description="Conversation messages")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
-    max_tokens: int = Field(default=300, ge=1, le=4096, description="Maximum response tokens")
+    max_tokens: int = Field(default=150, ge=1, le=4096, description="Maximum response tokens")
     stream: bool = Field(default=False, description="Whether to stream the response")
 
     @field_validator("messages")

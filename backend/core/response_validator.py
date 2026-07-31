@@ -33,7 +33,7 @@ _AI_DISCLAIMER_PATTERNS: tuple[str, ...] = (
 )
 
 # Default maximum allowed response length (characters).
-_DEFAULT_MAX_RESPONSE_LENGTH: int = 1500
+_DEFAULT_MAX_RESPONSE_LENGTH: int = 800
 
 # Minimum response length to reject empty or near-empty responses.
 _DEFAULT_MIN_RESPONSE_LENGTH: int = 2
@@ -59,7 +59,7 @@ class ResponseValidator:
         ----------
         max_response_length : int
             Maximum allowed response length in characters.
-            Defaults to ``1500``.
+            Defaults to ``800``.
         """
         self._max_response_length: int = max_response_length
         logger.info("ResponseValidator ready (max_length=%d)", self._max_response_length)

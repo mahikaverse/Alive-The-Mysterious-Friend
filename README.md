@@ -24,6 +24,17 @@ The backend exposes an **OpenAI-compatible Chat Completions API**, enabling seam
 
 ---
 
+# 🗣️ Conversation Style
+
+Alive is tuned to sound like a real, casual friend rather than a chatbot:
+
+- **Short replies** — usually 1 to 3 sentences. Long essays are avoided.
+- **Emojis, not stage directions** — feelings are expressed with emojis (😄 🥺 ✨) *only when they genuinely add tone*, never with written actions like `*smiles*`.
+- **Language mirroring** — Alive replies in English when you write English, in **Hinglish** (Hindi written in English letters, e.g. "kaise ho", "yaar", "theek hai") when you write Hinglish, and mixes both when you do.
+- **Consistent personality** — the tone, warmth, and voice stay stable across conversations.
+
+---
+
 # 🎯 Project Goals
 
 The primary objective of Alive is to create an AI companion that behaves like a real human rather than a traditional chatbot.
@@ -269,13 +280,18 @@ Checks include:
 
 ## AI
 
-- OpenAI
-- Gemini
+- OpenAI-compatible providers with automatic failover:
+  - DeepSeek (`deepseek-chat`)
+  - NVIDIA NIM (`meta/llama-3.3-70b-instruct`)
+  - OpenRouter (`deepseek/deepseek-chat`)
+  - xAI Grok (`grok-2-latest`)
+  - OpenAI (`gpt-4o-mini`)
+  - Google Gemini (`gemini-1.5-flash`)
 
 ## Memory
 
 - PostgreSQL
-- ChromaDB / FAISS
+- ChromaDB (vector store)
 
 ## Deployment
 
@@ -340,10 +356,21 @@ Create a `.env` file.
 Example:
 
 ```env
-OPENAI_API_KEY=your_api_key
+# Pick a primary provider and set at least one key (DeepSeek, NVIDIA,
+# OpenRouter, Grok, OpenAI, or Gemini). Providers without a key are skipped.
+LLM_PROVIDER=deepseek
+LLM_FALLBACK_ORDER=nvidia,openrouter,grok
+DEEPSEEK_API_KEY=your_deepseek_api_key
 
-DATABASE_URL=your_database_url
+# Optional: enables long-term memory (embeddings) + persistence
+OPENAI_API_KEY=your_openai_api_key
+DATABASE_URL=postgresql://alive:alive@postgres:5432/alive
 ```
+
+Full list of variables is in `.env.example`.
+
+> **Memory note:** memory *storage* runs in the background so it never
+> delays a reply. Memory *retrieval* (embeddings) requires `OPENAI_API_KEY`.
 
 ---
 
@@ -391,16 +418,19 @@ Complete documentation is available inside the `docs/` directory.
 
 | File | Purpose |
 |------|---------|
-| AI_RULES.md | Development guidelines |
-| ARCHITECTURE.md | System architecture |
-| API.md | API contracts |
-| MANUAL_TESTING_GUIDE.md | Manual testing (Swagger UI, Postman, curl, k6) + deployment checklist |
-| INTEGRATION.md | Module integration |
-| PLAN_PERSON_1-4.md | Development plans |
-| PROMPT_PERSON_1-4.md | AI coding prompts |
-| PROJECT_STATUS.md | Live project progress |
-| CHANGELOG.md | Project history |
-| NEXT_TASK.md | Current priorities |
+| `docs/AI_RULES.md` | Development guidelines |
+| `docs/ARCHITECTURE.md` | System architecture |
+| `docs/API.md` | API contracts |
+| `docs/CODING_CONVENTIONS.md` | Coding standards |
+| `docs/DECISIONS.md` | Architecture decision records |
+| `docs/INTEGRATION.md` | Module integration |
+| `docs/MANUAL_TESTING_GUIDE.md` | Manual testing (Swagger UI, Postman, curl, k6) + deployment checklist |
+| `docs/plans/PLAN_PERSON_1-4.md` | Development plans |
+| `docs/prompts/PROMPT_PERSON_1-4.md` | AI coding prompts |
+| `docs/project/PROJECT_STATUS.md` | Live project progress |
+| `docs/project/CHANGELOG.md` | Project history |
+| `docs/project/NEXT_TASK.md` | Current priorities |
+| `HOW_TO_RUN.md` | Quick-start guide |
 
 ---
 

@@ -4,7 +4,7 @@
 
 ## Project Status Dashboard
 
-**Last Updated:** 28 July 2026
+**Last Updated:** 1 August 2026
 
 **Project Version:** v1.1.0
 
@@ -123,6 +123,16 @@ None — All tasks complete
 - ✅ Fixed hardcoded paths in existing test files (tests/integration_test_p2.py, tests/test_memory.py)
 - ✅ All existing Person 2 and Person 3 test suites continue to pass
 - ✅ Project version bumped to v1.1.0
+
+### Conversation Quality & Latency (v1.1.0 polish)
+
+- ✅ Replies shortened to 1–3 sentences (`max_tokens` default 300 → 150, response validator limit 1500 → 800)
+- ✅ Emojis instead of written stage directions (`*smiles*`) — used only when they add tone, never every message
+- ✅ Hinglish support — mirrors user language (English ↔ Hinglish ↔ mixed)
+- ✅ Memory storage moved to a background task — embeddings no longer delay the reply
+- ✅ LLM timeout/retry tuned (30s timeout, 2 retries); no hard reply deadline so slow models still reply correctly
+- ✅ Docker ChromaDB path fix for non-root container user; entrypoint log-level case handling
+- ✅ Docs updated (README, API, integration, status/changelog, env template, gitignore, requirements)
 
 ---
 

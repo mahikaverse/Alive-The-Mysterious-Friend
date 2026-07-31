@@ -25,5 +25,5 @@ else
         --host 0.0.0.0 \
         --port 8000 \
         --reload \
-        --log-level "${LOG_LEVEL,,:-info}"
+        --log-level "$(echo "${LOG_LEVEL:-info}" | tr '[:upper:]' '[:lower:]')"
 fi

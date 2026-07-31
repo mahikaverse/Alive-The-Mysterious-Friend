@@ -10,7 +10,7 @@ A step-by-step guide to get the project running on your machine.
 |------|---------|---------|
 | **Docker Desktop** | Latest | https://www.docker.com/products/docker-desktop |
 | **Git** | Any | https://git-scm.com |
-| **OpenAI API Key** | — | https://platform.openai.com/api-keys |
+| **LLM API Key** (any provider) | — | DeepSeek, NVIDIA, OpenRouter, Grok, OpenAI, or Gemini |
 
 > Docker is the easiest way. No need to install Python, PostgreSQL, or ChromaDB separately.
 
@@ -33,13 +33,18 @@ Copy the example env file:
 cp .env.example .env
 ```
 
-Open `.env` and fill in your **OpenAI API key**:
+Open `.env` and fill in at least one LLM API key. The primary provider
+(default: DeepSeek) plus a fallback chain is set in `.env`:
 
 ```
-OPENAI_API_KEY=sk-your-key-here
+LLM_PROVIDER=deepseek
+LLM_FALLBACK_ORDER=nvidia,openrouter,grok
+DEEPSEEK_API_KEY=sk-your-key-here
 ```
 
-> You need an OpenAI account with credits. Get a key at https://platform.openai.com/api-keys
+> You need only **one** provider key for chat to work. Get a DeepSeek key at
+> https://platform.deepseek.com/api_keys. Set `OPENAI_API_KEY` additionally
+> if you want memory/embeddings to work.
 
 ---
 
@@ -177,7 +182,6 @@ source .venv/bin/activate     # Mac/Linux
 
 ```bash
 pip install -r requirements.txt
-pip install chromadb
 ```
 
 ### 4. Set up PostgreSQL
@@ -205,8 +209,8 @@ uvicorn backend.main:app --reload
 
 | Problem | Solution |
 |---------|----------|
-| `insufficient_quota` error | Your OpenAI API key has no credits. Add credits at https://platform.openai.com/billing |
-| `ModuleNotFoundError: chromadb` | Run `pip install chromadb` |
+| `insufficient_quota` error | Your provider API key has no credits. Check billing on your provider's dashboard |
+| `ModuleNotFoundError: chromadb` | `chromadb` is in `requirements.txt` — re-run `pip install -r requirements.txt` |
 | Port 8000 already in use | Stop the other process or change `PORT` in `.env` |
 | Database connection failed | Make sure PostgreSQL is running (Docker or local) |
 | Docker build fails | Run `docker compose down` first, then `docker compose up --build` |
@@ -244,6 +248,8 @@ Alive-The-Mysterious-Friend/
 | `GET` | `/health` | Liveness check |
 | `GET` | `/ready` | Readiness check |
 | `GET` | `/metrics` | Request metrics |
+| `GET` | `/usage` | Per-provider token usage |
+| `GET` | `/notifications` | Runtime notifications (failover, compaction, limits) |
 | `POST` | `/chat/completions` | Chat with Alive (OpenAI-compatible) |
 
 ---
