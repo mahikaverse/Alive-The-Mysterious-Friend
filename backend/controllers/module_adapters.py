@@ -84,10 +84,12 @@ class LLMProviderAdapter:
     def __init__(self, provider: ConcreteLLMProvider | None = None) -> None:
         self._provider = provider or ConcreteLLMProvider(
             provider=app_settings.llm_provider,
-            openai_model=app_settings.openai_model,
-            gemini_model=app_settings.gemini_model,
+            fallback_order=app_settings.llm_fallback_order,
         )
-        logger.info("LLMProviderAdapter ready (provider=%s)", app_settings.llm_provider)
+        logger.info(
+            "LLMProviderAdapter ready (provider=%s)",
+            app_settings.llm_provider,
+        )
 
     async def generate(self, prompt: str) -> str:
         return await asyncio.to_thread(self._provider.generate, prompt)

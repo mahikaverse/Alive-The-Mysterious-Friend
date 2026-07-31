@@ -9,6 +9,7 @@ import logging
 import sys
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -36,12 +37,6 @@ from backend.controllers.module_adapters import (
     ResponseValidatorAdapter,
 )
 from backend.database.connection import DatabaseConnection
-from backend.memory.embeddings import Embeddings
-from backend.memory.importance import ImportanceScorer
-from backend.memory.memory_manager import MemoryManager
-from backend.memory.memory_store import MemoryStore
-from backend.memory.ranking import MemoryRanking
-from backend.memory.retrieval import MemoryRetrieval
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +72,16 @@ def create_app() -> FastAPI:
     except Exception as exc:
         logger.warning("Database connection failed — memory will be disabled: %s", exc)
 
-    # Memory subsystem
+    # Memory subsystem (lazy imports — Person 3 dependencies may be missing)
     memory_manager = None
     try:
+        from backend.memory.embeddings import Embeddings
+        from backend.memory.importance import ImportanceScorer
+        from backend.memory.memory_manager import MemoryManager
+        from backend.memory.memory_store import MemoryStore
+        from backend.memory.ranking import MemoryRanking
+        from backend.memory.retrieval import MemoryRetrieval
+
         embeddings = Embeddings(
             api_key=settings.openai_api_key,
             model=settings.embedding_model,
@@ -143,6 +145,11 @@ def create_app() -> FastAPI:
             status_code=exc.status_code,
             content={"error": exc.detail},
         )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        logger.warning("Request validation error: %s", exc)
+        return JSONResponse(status_code=400, content={"error": "Invalid request format."})
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:

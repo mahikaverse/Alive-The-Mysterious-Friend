@@ -202,6 +202,41 @@
 
 ✅ Updated `.env.example` with `API_KEY` variable documentation
 
+---
+
+## 28 July 2026
+
+### E2E Integration & Final Testing (Person 1)
+
+✅ Created comprehensive 14-test end-to-end integration suite (tests/test_end_to_end.py):
+   - Server startup / health / readiness / metrics endpoints
+   - OpenAI-compatible POST /chat/completions with single-turn, system-message, multi-turn variants
+   - X-Request-ID propagation and response correlation (chatcmpl-{request_id})
+   - Request validation error handling (empty messages, invalid role, missing model, out-of-range params)
+   - Behaviour engine verification across multiple conversation turns
+   - Concurrent request isolation (5 parallel requests)
+   - 404 handling for unknown routes
+✅ Added RequestValidationError exception handler in app.py — returns 400 instead of FastAPI's default 422
+✅ Fixed LLM fallback in _step_generate — returns natural greeting instead of leaking master prompt
+✅ Fixed hardcoded sys.path in tests/integration_test_p2.py and tests/test_memory.py
+✅ All 14 E2E tests pass, all existing Person 2/3 test suites pass
+✅ Project version bumped to v1.1.0, progress updated to 100%
+
+### Optional Enhancements (Person 1)
+
+✅ Performance: Reduced redundant model_dump() calls in orchestrator — cached dicts for prompt builder context
+✅ Edge-case tests: Expanded E2E suite from 14 → 22 tests including:
+   - Auth middleware (API_KEY validation: missing, invalid, valid, public paths)
+   - Empty message content rejection
+   - Very long message (6000 chars) handling
+   - Zero temperature acceptance
+   - Negative max_tokens rejection
+   - Max conversation length enforcement
+   - Comprehensive response schema validation (id format, usage totals)
+   - HTTP method not allowed (PUT /chat/completions)
+✅ Documentation: Updated README with project completion table and release-candidate badge
+✅ Version bumped metadata to v1.1.0 across all endpoints
+
 Future changes should always be appended below.
 
 Never modify previous entries.

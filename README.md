@@ -1,6 +1,7 @@
 # 🧠 Alive – The Mysterious Friend
 
 > *A Human Simulation System that thinks, remembers, evolves, and builds meaningful relationships.*
+> **Status: 🟢 Release Candidate — Ready for Masquerade '26**
 
 ---
 
@@ -228,44 +229,21 @@ Checks include:
 
 ---
 
+# ✅ Project Completion
+
+| Milestone | Status |
+|-----------|--------|
+| API Layer | ✅ Complete |
+| Memory System | ✅ Complete (ChromaDB + PostgreSQL) |
+| Behaviour Layer | ✅ Complete (Emotion, Relationship, Life Sim) |
+| Intelligence Layer | ✅ Complete (Identity, Prompts, LLM, Validator) |
+| Orchestrator Pipeline | ✅ Complete (All 8 modules wired) |
+| End-to-End Integration | ✅ Complete (22 tests passing) |
+| Docker / Deployment | ✅ Complete (Multi-stage, docker-compose) |
+
+---
+
 # 📂 Project Structure
-
-```
-Alive/
-
-backend/
-│
-├── api/
-├── controllers/
-├── config/
-├── core/
-├── memory/
-├── behaviour/
-├── database/
-├── prompts/
-├── models/
-├── utils/
-│
-├── app.py
-└── main.py
-
-docs/
-│
-├── AI_RULES.md
-├── ARCHITECTURE.md
-├── API.md
-├── INTEGRATION.md
-│
-├── plans/
-├── prompts/
-└── project/
-
-tests/
-
-Dockerfile
-
-README.md
-```
 
 ---
 
@@ -416,6 +394,7 @@ Complete documentation is available inside the `docs/` directory.
 | AI_RULES.md | Development guidelines |
 | ARCHITECTURE.md | System architecture |
 | API.md | API contracts |
+| MANUAL_TESTING_GUIDE.md | Manual testing (Swagger UI, Postman, curl, k6) + deployment checklist |
 | INTEGRATION.md | Module integration |
 | PLAN_PERSON_1-4.md | Development plans |
 | PROMPT_PERSON_1-4.md | AI coding prompts |

@@ -1,0 +1,641 @@
+{
+  "info": {
+    "_postman_id": "1a2b3c4d-5e6f-4a5b-9c8d-7e6f5a4b3c2d",
+    "name": "Alive - Manual Testing",
+    "description": "Manual test suite for the Alive API.\n\nPublic endpoints (no auth required):\n- GET /health, GET /ready, GET /metrics\n\nProtected endpoints (auth enforced when API_KEY is set in .env):\n- POST /chat/completions, GET /usage, GET /notifications\n\nVariables:\n- baseUrl:   server base URL (default http://localhost:8000)\n- apiKey:    API key - leave empty when API_KEY is not set in .env\n- model:     model identifier (default alive-v1)\n- requestId: used to verify X-Request-ID echo propagation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{apiKey}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Operational / Health",
+      "item": [
+        {
+          "name": "GET /health - liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Expect 200 with status ok, version 1.1.0, uptime_seconds, model, environment."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /ready - readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["ready"]
+            },
+            "description": "Expect 200 with status ready and orchestrator initialised."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /metrics - request metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            },
+            "description": "Expect 200 with total_requests, requests_by_path, requests_by_status, avg_latency_seconds."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /usage - LLM usage report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["usage"]
+            },
+            "description": "Expect 200 with date, conversations_today, providers map (per-provider tokens, calls, exhausted)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /notifications - runtime events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Expect 200 with a notifications list (provider exhaustion, compaction, daily limit)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Chat - Happy Path",
+      "item": [
+        {
+          "name": "Basic greeting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Hello! Who are you?\"}\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 300\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 200. Response has id (chatcmpl-...), object chat.completion, created, model, choices[0].message.role=assistant, finish_reason=stop, usage."
+          },
+          "response": []
+        },
+        {
+          "name": "With system message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"system\", \"content\": \"You are Alive, a mysterious friend.\"},\n    {\"role\": \"user\", \"content\": \"What are you thinking about?\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 200 with a non-empty response."
+          },
+          "response": []
+        },
+        {
+          "name": "Multi-turn conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Hello!\"},\n    {\"role\": \"assistant\", \"content\": \"Hey! How's it going?\"},\n    {\"role\": \"user\", \"content\": \"I'm good! I just got a new book.\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 200. Response should reflect the conversation history."
+          },
+          "response": []
+        },
+        {
+          "name": "Memory: introduce yourself",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"My name is Rahul and I love cricket. Remember that.\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Store a memory. Requires OPENAI_API_KEY (embeddings) + a running PostgreSQL/ChromaDB for persistence."
+          },
+          "response": []
+        },
+        {
+          "name": "Memory: recall",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"What do you remember about me?\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect Alive to recall details stored in the previous request (name, interest)."
+          },
+          "response": []
+        },
+        {
+          "name": "Zero temperature (deterministic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Say something\"}\n  ],\n  \"temperature\": 0.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 200. temperature 0.0 is valid (range 0.0-2.0)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Chat - Negative / Error Cases",
+      "item": [
+        {
+          "name": "Empty messages list",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422 (validation error)."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"robot\", \"content\": \"hi\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422. Role must be system, user, or assistant."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing model field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [{\"role\": \"user\", \"content\": \"hi\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422. model is required."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid temperature (99)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"hi\"}],\n  \"temperature\": 99.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422. temperature must be 0.0-2.0."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative max_tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"hi\"}],\n  \"max_tokens\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422. max_tokens must be 1-4096."
+          },
+          "response": []
+        },
+        {
+          "name": "Empty message content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400 or 422. content has min_length=1."
+          },
+          "response": []
+        },
+        {
+          "name": "Over conversation length limit (101 msgs)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Message 0\"},\n    {\"role\": \"user\", \"content\": \"Message 1\"},\n    {\"role\": \"user\", \"content\": \"Message 2\"},\n    {\"role\": \"user\", \"content\": \"Message 3\"},\n    {\"role\": \"user\", \"content\": \"Message 4\"},\n    {\"role\": \"user\", \"content\": \"Message 5\"},\n    {\"role\": \"user\", \"content\": \"Message 6\"},\n    {\"role\": \"user\", \"content\": \"Message 7\"},\n    {\"role\": \"user\", \"content\": \"Message 8\"},\n    {\"role\": \"user\", \"content\": \"Message 9\"},\n    {\"role\": \"user\", \"content\": \"Message 10\"},\n    {\"role\": \"user\", \"content\": \"Message 11\"},\n    {\"role\": \"user\", \"content\": \"Message 12\"},\n    {\"role\": \"user\", \"content\": \"Message 13\"},\n    {\"role\": \"user\", \"content\": \"Message 14\"},\n    {\"role\": \"user\", \"content\": \"Message 15\"},\n    {\"role\": \"user\", \"content\": \"Message 16\"},\n    {\"role\": \"user\", \"content\": \"Message 17\"},\n    {\"role\": \"user\", \"content\": \"Message 18\"},\n    {\"role\": \"user\", \"content\": \"Message 19\"},\n    {\"role\": \"user\", \"content\": \"Message 20\"},\n    {\"role\": \"user\", \"content\": \"Message 21\"},\n    {\"role\": \"user\", \"content\": \"Message 22\"},\n    {\"role\": \"user\", \"content\": \"Message 23\"},\n    {\"role\": \"user\", \"content\": \"Message 24\"},\n    {\"role\": \"user\", \"content\": \"Message 25\"},\n    {\"role\": \"user\", \"content\": \"Message 26\"},\n    {\"role\": \"user\", \"content\": \"Message 27\"},\n    {\"role\": \"user\", \"content\": \"Message 28\"},\n    {\"role\": \"user\", \"content\": \"Message 29\"},\n    {\"role\": \"user\", \"content\": \"Message 30\"},\n    {\"role\": \"user\", \"content\": \"Message 31\"},\n    {\"role\": \"user\", \"content\": \"Message 32\"},\n    {\"role\": \"user\", \"content\": \"Message 33\"},\n    {\"role\": \"user\", \"content\": \"Message 34\"},\n    {\"role\": \"user\", \"content\": \"Message 35\"},\n    {\"role\": \"user\", \"content\": \"Message 36\"},\n    {\"role\": \"user\", \"content\": \"Message 37\"},\n    {\"role\": \"user\", \"content\": \"Message 38\"},\n    {\"role\": \"user\", \"content\": \"Message 39\"},\n    {\"role\": \"user\", \"content\": \"Message 40\"},\n    {\"role\": \"user\", \"content\": \"Message 41\"},\n    {\"role\": \"user\", \"content\": \"Message 42\"},\n    {\"role\": \"user\", \"content\": \"Message 43\"},\n    {\"role\": \"user\", \"content\": \"Message 44\"},\n    {\"role\": \"user\", \"content\": \"Message 45\"},\n    {\"role\": \"user\", \"content\": \"Message 46\"},\n    {\"role\": \"user\", \"content\": \"Message 47\"},\n    {\"role\": \"user\", \"content\": \"Message 48\"},\n    {\"role\": \"user\", \"content\": \"Message 49\"},\n    {\"role\": \"user\", \"content\": \"Message 50\"},\n    {\"role\": \"user\", \"content\": \"Message 51\"},\n    {\"role\": \"user\", \"content\": \"Message 52\"},\n    {\"role\": \"user\", \"content\": \"Message 53\"},\n    {\"role\": \"user\", \"content\": \"Message 54\"},\n    {\"role\": \"user\", \"content\": \"Message 55\"},\n    {\"role\": \"user\", \"content\": \"Message 56\"},\n    {\"role\": \"user\", \"content\": \"Message 57\"},\n    {\"role\": \"user\", \"content\": \"Message 58\"},\n    {\"role\": \"user\", \"content\": \"Message 59\"},\n    {\"role\": \"user\", \"content\": \"Message 60\"},\n    {\"role\": \"user\", \"content\": \"Message 61\"},\n    {\"role\": \"user\", \"content\": \"Message 62\"},\n    {\"role\": \"user\", \"content\": \"Message 63\"},\n    {\"role\": \"user\", \"content\": \"Message 64\"},\n    {\"role\": \"user\", \"content\": \"Message 65\"},\n    {\"role\": \"user\", \"content\": \"Message 66\"},\n    {\"role\": \"user\", \"content\": \"Message 67\"},\n    {\"role\": \"user\", \"content\": \"Message 68\"},\n    {\"role\": \"user\", \"content\": \"Message 69\"},\n    {\"role\": \"user\", \"content\": \"Message 70\"},\n    {\"role\": \"user\", \"content\": \"Message 71\"},\n    {\"role\": \"user\", \"content\": \"Message 72\"},\n    {\"role\": \"user\", \"content\": \"Message 73\"},\n    {\"role\": \"user\", \"content\": \"Message 74\"},\n    {\"role\": \"user\", \"content\": \"Message 75\"},\n    {\"role\": \"user\", \"content\": \"Message 76\"},\n    {\"role\": \"user\", \"content\": \"Message 77\"},\n    {\"role\": \"user\", \"content\": \"Message 78\"},\n    {\"role\": \"user\", \"content\": \"Message 79\"},\n    {\"role\": \"user\", \"content\": \"Message 80\"},\n    {\"role\": \"user\", \"content\": \"Message 81\"},\n    {\"role\": \"user\", \"content\": \"Message 82\"},\n    {\"role\": \"user\", \"content\": \"Message 83\"},\n    {\"role\": \"user\", \"content\": \"Message 84\"},\n    {\"role\": \"user\", \"content\": \"Message 85\"},\n    {\"role\": \"user\", \"content\": \"Message 86\"},\n    {\"role\": \"user\", \"content\": \"Message 87\"},\n    {\"role\": \"user\", \"content\": \"Message 88\"},\n    {\"role\": \"user\", \"content\": \"Message 89\"},\n    {\"role\": \"user\", \"content\": \"Message 90\"},\n    {\"role\": \"user\", \"content\": \"Message 91\"},\n    {\"role\": \"user\", \"content\": \"Message 92\"},\n    {\"role\": \"user\", \"content\": \"Message 93\"},\n    {\"role\": \"user\", \"content\": \"Message 94\"},\n    {\"role\": \"user\", \"content\": \"Message 95\"},\n    {\"role\": \"user\", \"content\": \"Message 96\"},\n    {\"role\": \"user\", \"content\": \"Message 97\"},\n    {\"role\": \"user\", \"content\": \"Message 98\"},\n    {\"role\": \"user\", \"content\": \"Message 99\"},\n    {\"role\": \"user\", \"content\": \"Message 100\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 400. RequestHandler rejects conversations over 100 messages."
+          },
+          "response": []
+        },
+        {
+          "name": "GET unknown route (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nonexistent",
+              "host": ["{{baseUrl}}"],
+              "path": ["nonexistent"]
+            },
+            "description": "Expect 404."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /chat/completions (405)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "Expect 405 (method not allowed)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Auth (only when API_KEY is set)",
+      "item": [
+        {
+          "name": "Missing auth header (expect 401)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Hi\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "When API_KEY is set, expect 401 with error Unauthorized. Skipped otherwise."
+          },
+          "response": []
+        },
+        {
+          "name": "Wrong auth header (expect 401)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "wrong-key",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Hi\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "When API_KEY is set, expect 401. Skipped otherwise."
+          },
+          "response": []
+        },
+        {
+          "name": "Valid auth header (expect 200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [{\"role\": \"user\", \"content\": \"Hi\"}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "completions"]
+            },
+            "description": "When API_KEY is set, set the apiKey variable to the correct key and expect 200."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "model",
+      "value": "alive-v1",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "manual-test-001",
+      "type": "string"
+    }
+  ]
+}

@@ -6,8 +6,9 @@ Tests the complete memory pipeline:
 Uses mocks for external services (OpenAI API, PostgreSQL, ChromaDB).
 """
 
+import os
 import sys
-sys.path.insert(0, "D:\\Projects\\Alive-The-Mysterious-Friend")
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
