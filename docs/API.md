@@ -73,7 +73,7 @@ Authorization: Bearer <API_KEY>   (Optional)
     }
   ],
   "temperature": 0.7,
-  "max_tokens": 300
+  "max_tokens": 150
 }
 ```
 
@@ -92,7 +92,7 @@ Authorization: Bearer <API_KEY>   (Optional)
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "Hey! It's nice to meet you."
+        "content": "Hey! Good to see you 😄 Kaise ho aaj?"
       },
       "finish_reason": "stop"
     }
@@ -133,8 +133,16 @@ Update Internal State
 
 ↓
 
+Store New Memories (background)
+
+↓
+
 Return Response
 ```
+
+> **Note:** memory *storage* runs as a background task so it never delays
+> the reply. Only memory *retrieval* happens synchronously (before the
+> LLM call). See `ConversationController._schedule_memory_store()`.
 
 ---
 
@@ -342,8 +350,16 @@ GeneratedResponse
 
 Supported providers
 
+- DeepSeek (default)
+- NVIDIA NIM
+- OpenRouter
+- Grok (xAI)
 - OpenAI
 - Gemini
+
+A failover chain is built from the primary provider plus
+`LLM_FALLBACK_ORDER`. Providers without a configured API key
+are skipped automatically.
 
 ---
 
@@ -493,20 +509,21 @@ Invalid requests should immediately return an appropriate HTTP error response.
 
 ---
 
-# 21. Future API Extensions
+# 21. Operational Endpoints
 
-The architecture is designed to support additional endpoints in future versions, such as:
+The following operational endpoints are implemented and live:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `POST /memory/search` | Search stored memories |
-| `GET /persona` | Retrieve current persona profile |
-| `GET /emotion` | Retrieve current emotional state |
-| `GET /relationship` | Retrieve relationship statistics |
-| `GET /health` | Health check endpoint |
-| `GET /metrics` | Monitoring and diagnostics |
+| `GET /health` | Health check (liveness) |
+| `GET /ready` | Readiness probe |
+| `GET /metrics` | Request metrics and latency |
+| `GET /usage` | Per-provider token usage report |
+| `GET /notifications` | Runtime notifications (failover, compaction, limits) |
 
-These endpoints are optional and are not required for the current hackathon.
+Future extension ideas include `POST /memory/search`, `GET /persona`,
+`GET /emotion`, and `GET /relationship`. These are optional and not
+required for the current competition.
 
 ---
 

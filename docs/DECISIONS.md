@@ -278,16 +278,84 @@ Negative
 
 ---
 
-# Future Decisions
+# ADR-006
 
-Record all significant architectural or technical decisions here as the project evolves.
+**Date**
 
-Examples include:
+2026-08-01
 
-- Database technology changes
-- LLM provider changes
-- Memory architecture updates
-- Deployment strategy changes
-- Security model updates
-- API versioning decisions
-- Performance optimizations
+**Status**
+
+Accepted
+
+### Decision
+
+Reply speed must not come at the cost of reply quality; do not enforce hard LLM timeouts or deadlines.
+
+### Context
+
+Initial latency tuning added a 10s client timeout and a hard 20s `asyncio.wait_for` deadline in the orchestrator so replies always returned quickly. Testers found the fallback replies unnatural — worse than waiting a minute for a correct answer.
+
+### Alternatives
+
+- Aggressive timeouts + canned fallback replies
+- Background memory storage + shorter `max_tokens` only
+- Hard deadlines with queueing
+
+### Reasoning
+
+A human-simulation chatbot scores on how natural it sounds, not on 2-second responses. Removing the deadline means slow providers still produce a genuine reply.
+
+### Consequences
+
+Positive
+
+- Correct, human-sounding replies even on slow models
+- Latency still improved via background memory storage and `max_tokens=150`
+
+Negative
+
+- Slow providers may occasionally take a long time to reply
+
+---
+
+# ADR-007
+
+**Date**
+
+2026-08-01
+
+**Status**
+
+Accepted
+
+### Decision
+
+Use short replies, emojis (not `*stage directions*`), and language mirroring (English / Hinglish / mixed).
+
+### Context
+
+Alive previously answered in long, formal paragraphs with written actions like `*smiles*`. Users wanted a casual friend who replies in 1–3 sentences, uses emojis sparingly, and responds in the same language as the user (including Hinglish).
+
+### Alternatives
+
+- Keep formal tone
+- Always English
+- Emojis in every message
+
+### Reasoning
+
+Mirroring the user's language and keeping replies short makes the character feel human and relatable for the Masquerade '26 challenge.
+
+### Consequences
+
+Positive
+
+- More natural, conversational feel
+- Works for English, Hinglish, and mixed chats
+
+Negative
+
+- Requires prompt discipline to avoid emoji overuse
+
+---

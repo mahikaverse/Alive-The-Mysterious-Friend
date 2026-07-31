@@ -6,6 +6,48 @@
 
 ---
 
+# Version 1.1
+
+## 1 August 2026
+
+### Conversation Quality & Latency
+
+✅ Shortened replies to 1–3 sentences (`max_tokens` default 300 → 150; response validator max length 1500 → 800)
+
+✅ Replaced written stage directions (`*smiles*`) with emojis, used only when they genuinely add tone
+
+✅ Added Hinglish support — Alive mirrors the user's language (English → English, Hinglish → Hinglish, mixed → mixed)
+
+✅ Prompt templates updated (system prompt, personality, instructions, examples, safety) for natural, casual tone
+
+### Performance
+
+✅ Moved memory storage to a background task — OpenAI embedding round-trip no longer delays the reply
+
+✅ Tuned LLM timeout (30s) and retries (2); no hard deadline enforced so slow models still answer correctly
+
+### Infra
+
+✅ Dockerfile: create and chown `/app/chroma_db` for the non-root container user
+
+✅ Entrypoint: log-level value lowercased for uvicorn
+
+### Docs & Config
+
+✅ Updated README (conversation style section, tech stack providers, env example, docs table)
+
+✅ Updated API, INTEGRATION, MANUAL_TESTING_GUIDE, PROJECT_STATUS docs
+
+✅ Postman collection `max_tokens` example → 150
+
+✅ `.env.example` reflects `MAX_TOKENS=150` and multi-provider keys
+
+✅ Removed unused `faiss-cpu` from requirements.txt / pyproject.toml
+
+✅ `.gitignore`: added `.pytest_cache/`, coverage, and cache entries
+
+---
+
 # Version 1.0
 
 ## 26 July 2026

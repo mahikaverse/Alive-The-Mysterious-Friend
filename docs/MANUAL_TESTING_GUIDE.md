@@ -121,7 +121,7 @@ GROK_API_KEY=xai-...
     { "role": "user", "content": "Hello! Who are you?" }
   ],
   "temperature": 0.7,
-  "max_tokens": 300
+  "max_tokens": 150
 }
 ```
 
@@ -144,7 +144,12 @@ GROK_API_KEY=xai-...
 }
 ```
 
-4. **Negative tests:** repeat with each bad body below and confirm the HTTP status:
+4. **Conversation style checks** (v1.1):
+   - Reply should be short (1–3 sentences) — no long essays.
+   - Emojis only when they add tone; never `*asterisk stage directions*`.
+   - Language mirroring: chat in English → reply in English; in Hinglish (e.g. "kaise ho", "yaar") → reply in Hinglish; mix both → Alive mixes both.
+
+5. **Negative tests:** repeat with each bad body below and confirm the HTTP status:
 
 | Body change | Expected |
 |---|---|

@@ -55,7 +55,7 @@ class Settings(BaseSettings):
 
     # --- model defaults ---
     model_name: str = Field(default="alive-v1", description="Default model identifier")
-    max_tokens: int = Field(default=300, ge=1, le=4096, description="Default max tokens")
+    max_tokens: int = Field(default=150, ge=1, le=4096, description="Default max tokens")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Default temperature")
 
     # --- cors ---

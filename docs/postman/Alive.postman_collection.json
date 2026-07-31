@@ -112,7 +112,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Hello! Who are you?\"}\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 300\n}",
+              "raw": "{\n  \"model\": \"{{model}}\",\n  \"messages\": [\n    {\"role\": \"user\", \"content\": \"Hello! Who are you?\"}\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 150\n}",
               "options": {
                 "raw": {
                   "language": "json"

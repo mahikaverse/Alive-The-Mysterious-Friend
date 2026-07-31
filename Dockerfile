@@ -26,6 +26,9 @@ COPY --from=builder /usr/local /usr/local
 COPY --chown=alive:alive backend/ backend/
 COPY --chown=alive:alive scripts/ scripts/
 
+# Create writable ChromaDB directory for the non-root user
+RUN mkdir -p /app/chroma_db && chown -R alive:alive /app/chroma_db
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1

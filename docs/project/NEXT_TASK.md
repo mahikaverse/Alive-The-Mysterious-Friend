@@ -6,7 +6,7 @@
 
 **Project Status: ✅ RELEASE CANDIDATE — Ready for Masquerade '26 Submission**
 
-All tasks across all 4 persons are complete. 14 end-to-end tests pass. All module-level tests pass.
+All tasks across all 4 persons are complete. 22 end-to-end tests pass. All module-level tests pass.
 
 ---
 
@@ -23,6 +23,7 @@ No remaining high-priority tasks.
 - Performance optimization (optional).
 - Monitoring improvements (optional).
 - Additional edge-case testing (optional).
+- Add more conversational-style tests (Hinglish mirroring, emoji restraint).
 
 ---
 

@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_TIMEOUT: int = 30
 _DEFAULT_MAX_RETRIES: int = 2
-_DEFAULT_MAX_TOKENS: int = 300
+_DEFAULT_MAX_TOKENS: int = 150
 _DEFAULT_TEMPERATURE: float = 0.7
 
 _DEFAULT_FALLBACK_ORDER: tuple[str, ...] = ("nvidia", "openrouter", "grok")
