@@ -8,8 +8,9 @@ Uses mock/sample data for all external inputs (Person 4's EmotionState,
 RelationshipState, LifeContext and Person 3's memories).
 """
 
+import os
 import sys
-sys.path.insert(0, "D:\\Resume_Projects\\Alive-The-Mysterious-Friend")
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")

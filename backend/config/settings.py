@@ -34,15 +34,24 @@ class Settings(BaseSettings):
     # --- api keys ---
     openai_api_key: str = Field(default="", description="OpenAI API key")
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
+    deepseek_api_key: str = Field(default="", description="DeepSeek API key")
+    nvidia_api_key: str = Field(default="", description="NVIDIA NIM API key")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
+    grok_api_key: str = Field(default="", description="xAI Grok API key")
     api_key: str = Field(default="", description="Optional API key for request authentication")
 
     # --- database ---
     database_url: str = Field(default="", description="PostgreSQL connection string")
 
     # --- llm provider (Person 2) ---
-    llm_provider: str = Field(default="openai", description="LLM backend: openai or gemini")
+    llm_provider: str = Field(default="deepseek", description="Primary LLM backend: openai, gemini, deepseek, nvidia, openrouter, or grok")
+    llm_fallback_order: str = Field(default="nvidia,openrouter,grok", description="Comma-separated fallback providers used after the primary is exhausted")
     openai_model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
     gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model name")
+    deepseek_model: str = Field(default="deepseek-chat", description="DeepSeek model name")
+    nvidia_model: str = Field(default="meta/llama-3.3-70b-instruct", description="NVIDIA NIM model name")
+    openrouter_model: str = Field(default="deepseek/deepseek-chat", description="OpenRouter model name")
+    grok_model: str = Field(default="grok-2-latest", description="xAI Grok model name")
 
     # --- model defaults ---
     model_name: str = Field(default="alive-v1", description="Default model identifier")
@@ -62,6 +71,15 @@ class Settings(BaseSettings):
     chroma_collection: str = Field(default="alive_memories", description="ChromaDB collection name")
     memory_top_k: int = Field(default=5, ge=1, le=50, description="Number of memories to retrieve per turn")
     memory_importance_threshold: float = Field(default=0.5, ge=0.0, le=1.0, description="Minimum importance score to store a memory")
+
+    # --- usage limits & token saving (Person 2) ---
+    max_conversations_per_day: int = Field(default=100, ge=1, description="Maximum conversations per day before all providers are paused")
+    daily_token_budget: int = Field(default=0, ge=0, description="Maximum tokens per provider per day (0 = unlimited)")
+    compact_conversation_enabled: bool = Field(default=True, description="Enable automatic conversation compaction to save tokens")
+    conversation_token_threshold: int = Field(default=6000, ge=500, description="Estimated token count that triggers conversation compaction")
+    conversation_keep_recent: int = Field(default=10, ge=2, description="Most recent messages kept verbatim during compaction")
+    llm_cache_enabled: bool = Field(default=False, description="Cache identical LLM prompts to avoid repeat billing")
+    llm_cache_max_entries: int = Field(default=256, ge=0, description="Maximum entries in the LLM response cache")
 
     @field_validator("environment")
     @classmethod

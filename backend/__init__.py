@@ -6,6 +6,6 @@ evolves, and builds meaningful relationships.
 Competition: Masquerade '26 – The Turing Challenge
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __app_name__ = "Alive"
 __description__ = "A Human Simulation System for Masquerade '26 - The Turing Challenge"

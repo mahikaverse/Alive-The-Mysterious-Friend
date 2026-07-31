@@ -171,11 +171,14 @@ class ConversationController:
 
     async def _step_build_prompt(self, ctx: PipelineContext, _unused: str = "") -> str:
         if self._prompt_builder is not None:
+            emotion_dict = ctx.emotion.model_dump()
+            relationship_dict = ctx.relationship.model_dump()
+            persona_dict = ctx.persona.model_dump()
             return await self._prompt_builder.build_prompt(
-                persona=ctx.persona.model_dump(),
-                emotion=ctx.emotion.model_dump(),
+                persona=persona_dict,
+                emotion=emotion_dict,
                 memories=ctx.memories,
-                relationships=ctx.relationship.model_dump(),
+                relationships=relationship_dict,
                 life_events=ctx.life_events.recent_activities,
                 conversation=ctx.conversation,
             )
@@ -183,7 +186,14 @@ class ConversationController:
 
     async def _step_generate(self, ctx: PipelineContext, prompt: str = "") -> str:
         if self._llm is not None:
-            return await self._llm.generate(prompt)
+            try:
+                return await self._llm.generate(prompt)
+            except Exception as exc:
+                logger.warning(
+                    "[%s] LLM generation failed: %s — using fallback response",
+                    ctx.request_id, exc,
+                )
+                return "Hey! It's nice to meet you. How are you doing today?"
         return "Hey! It's nice to meet you."
 
     async def _step_validate(self, ctx: PipelineContext, response_text: str = "") -> str:

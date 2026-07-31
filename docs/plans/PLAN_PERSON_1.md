@@ -89,6 +89,9 @@ Produces
 - Request validation complete
 - Response format correct
 - Docker builds successfully
+- End-to-end integration tests pass
+- All module tests pass
+- Documentation updated (PROJECT_STATUS.md, CHANGELOG.md, NEXT_TASK.md)
 
 # File Ownership
 

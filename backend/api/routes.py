@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends
 from starlette.requests import Request
 
 from backend.api.dependencies import get_conversation_controller
+from backend.core.notifications import notification_manager
+from backend.core.usage_tracker import usage_tracker
 from backend.utils.metrics import metrics_collector
 from backend.config.settings import settings
 from backend.controllers.conversation_controller import ConversationController
@@ -32,7 +34,7 @@ async def health() -> dict:
     """Lightweight liveness probe — returns immediately if the process is alive."""
     return {
         "status": "ok",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "uptime_seconds": int(time.time() - START_TIME),
         "model": settings.model_name,
         "environment": settings.environment,
@@ -48,7 +50,7 @@ async def ready() -> dict:
     """Readiness probe — confirms the orchestrator and core services are initialised."""
     return {
         "status": "ready",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "orchestrator": "initialised",
     }
 
@@ -61,6 +63,28 @@ async def ready() -> dict:
 async def metrics() -> dict:
     """Return a snapshot of request metrics collected since startup."""
     return metrics_collector.snapshot()
+
+
+@router.get(
+    "/usage",
+    summary="LLM usage report",
+    description="Per-provider token usage, call counts, exhaustion state, and today's conversation count.",
+)
+async def usage() -> dict:
+    """Return the daily LLM usage and provider health report."""
+    return usage_tracker.snapshot()
+
+
+@router.get(
+    "/notifications",
+    summary="Recent notifications",
+    description="Recent runtime notifications (provider exhaustion, compaction, daily limit).",
+)
+async def notifications(since: int | None = None, limit: int = 50) -> dict:
+    """Return recent notifications, newest first."""
+    return {
+        "notifications": notification_manager.list(since=since, limit=limit),
+    }
 
 
 @router.post(
