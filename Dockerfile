@@ -26,6 +26,9 @@ COPY --from=builder /usr/local /usr/local
 COPY --chown=alive:alive backend/ backend/
 COPY --chown=alive:alive scripts/ scripts/
 
+# Ensure the entrypoint is executable (file modes are not preserved by git)
+RUN chmod +x scripts/entrypoint.sh
+
 # gosu lets the entrypoint drop from root to the 'alive' user after
 # fixing ownership of mounted volumes (Railway mounts volumes as root).
 RUN apt-get update && apt-get install -y --no-install-recommends gosu \
